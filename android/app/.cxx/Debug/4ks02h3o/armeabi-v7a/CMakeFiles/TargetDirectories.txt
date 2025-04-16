@@ -1,0 +1,2 @@
+/Users/mehedihasan/Desktop/Files/projects/neways_face_attendance_pro 2/android/app/.cxx/Debug/4ks02h3o/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/mehedihasan/Desktop/Files/projects/neways_face_attendance_pro 2/android/app/.cxx/Debug/4ks02h3o/armeabi-v7a/CMakeFiles/rebuild_cache.dir
