@@ -203,17 +203,21 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
       if (response != null) {
         if (response['action'] != null) {
           if(response['action'] == "update_limit"){
-            popupReasons(context: context, shortCode: 'CA', message: response['message'], attendance: "Check out", warningTextColor: Colors.red, title: "Request for checkout again", action: response['action']);
+            if(response['message'].contains('Check-Out time 2 times')){
+              popupReasons(context: context, shortCode: 'CA', message: response['message'], attendance: "Request for checkout again", warningTextColor: Colors.red, title: "Request for checkout again", action: response['action']);
+            }else{
+              popupReasons(context: context, shortCode: 'CA', message: response['message'], attendance: "Request for checkout again", warningTextColor: Colors.red, title: "Request for checkout again", action: response['action']);
+            }
           } else if(response['action'] == "weeken_today"){
-            popupReasons(context: context, shortCode: 'WD', message: response['message'], attendance: "Weekend Request", warningTextColor: Colors.red, title: "Request for weekend duty", action: response['action']);
+            popupReasons(context: context, shortCode: 'WD', message: response['message'], attendance: "Request for weekend duty", warningTextColor: Colors.red, title: "Request for weekend duty", action: response['action']);
           }else if(response['action'] == "holyday_today"){
-            popupReasons(context: context, shortCode: 'HD', message: response['message'], attendance: "Holiday Request", warningTextColor: Colors.red, title: "Request for holyday duty", action: response['action']);
+            popupReasons(context: context, shortCode: 'HD', message: response['message'], attendance: "Request for holyday duty", warningTextColor: Colors.red, title: "Request for holyday duty", action: response['action']);
           }else if(response['action'] == "leave_today"){
-            popupReasons(context: context, shortCode: 'WL', message: response['message'], attendance: "Holiday Request", warningTextColor: Colors.red, title: "Request for widthdraw leave", action: response['action']);
+            popupReasons(context: context, shortCode: 'WL', message: response['message'], attendance: "Request for widthdraw leave", warningTextColor: Colors.red, title: "Request for widthdraw leave", action: response['action']);
           }else if(response['action'] == "early_checkout"){
-            popupReasons(context: context, shortCode: 'EO', message: response['message'], attendance: "Early Request", warningTextColor: Colors.red, title: "Request for early checkout", action: response['action']);
+            popupReasons(context: context, shortCode: 'EO', message: response['message'], attendance: "Request for early checkout", warningTextColor: Colors.red, title: "Request for early checkout", action: response['action']);
           }else if(response['action'] == "early_checkin"){
-            popupReasons(context: context, shortCode: 'EI', message: response['message'], attendance: "Early check in", warningTextColor: Colors.red, title: "Request for early checkin", action: response['action']);
+            popupReasons(context: context, shortCode: 'EI', message: response['message'], attendance: "Request for early checkin", warningTextColor: Colors.red, title: "Request for early checkin", action: response['action']);
           }
         } else {
           final currentStatus = getShiftStatus();
@@ -242,7 +246,7 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
             performCheckOut();
             final now = DateTime.now();
             final formattedDate =
-                "${now.hour.toString().padLeft(2, '0')}:"  // Hours (24-hour format)
+                "${now.hour.toString().padLeft(2, '0')}:"
                 "${now.minute.toString().padLeft(2, '0')}";
             box.write("checkedOut", formattedDate);
             successToast(context: context, msg: "Checked out successfully!");

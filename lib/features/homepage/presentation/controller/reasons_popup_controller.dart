@@ -404,7 +404,7 @@ mixin ReasonsPopupController on GetxController {
                     children: [
                       20.ph,
                       CustomSimpleText(
-                          text: "Request for ${attendance.toLowerCase()}"),
+                          text: "${attendance.toLowerCase()}."),
                       5.ph,
                       Align(
                         alignment: Alignment.centerLeft,
