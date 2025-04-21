@@ -4,4 +4,5 @@ class AppAssets {
   static const String noInternet = 'assets/no_internet.png';
   static const String noFoundImage = 'assets/svg/empty.svg';
   static const String logout = 'assets/logout.png';
+  static const String warning = 'assets/warning.png';
 }

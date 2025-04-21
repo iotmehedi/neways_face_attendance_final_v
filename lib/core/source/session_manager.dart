@@ -9,21 +9,21 @@ class SessionManager {
   Future<bool> createSession(LoginModel? loginModelData,
       {String? idNumber, String? password}) async {
     try {
-
+      print("The check in time test ${loginModelData?.attendance?.checkinTime}");
       box.write("id",loginModelData?.user?.employeeId);
       if(loginModelData?.attendance == null){
         box.write("isCheckedOut", false);
         box.write("isCheckedIn", false);
-      } else if(loginModelData?.attendance?.checkinTime?.isNotEmpty ?? false){
-        print("this is check in time value ${loginModelData?.attendance?.checkinTime}");
+        box.write("checkedIn", null);
+      } else if(loginModelData?.attendance?.checkinTime?.isNotEmpty ?? false || loginModelData?.attendance?.checkinTime != null){
         box.write("isCheckedIn", true);
-        box.write("checkedIn", loginModelData?.attendance?.checkinTime);
       }else{
         box.write("isCheckedIn", false);
       }
      if(loginModelData?.attendance == null){
        box.write("isCheckedOut", false);
        box.write("isCheckedIn", false);
+       box.write("checkedOut", null);
      } else if(loginModelData?.attendance?.checkoutTime?.isNotEmpty ?? false){
         box.write("isCheckedOut", true);
         box.write("checkOut", loginModelData?.attendance?.checkoutTime);
