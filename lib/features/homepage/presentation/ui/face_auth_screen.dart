@@ -11,6 +11,7 @@ import 'package:neways_face_attendance_pro/core/utils/common_toast/custom_toast.
 import 'package:neways_face_attendance_pro/core/utils/consts/app_colors.dart';
 import 'package:neways_face_attendance_pro/core/utils/consts/app_sizes.dart';
 import 'package:neways_face_attendance_pro/features/widgets/cached_image_network/custom_cached_image_network.dart';
+import 'package:neways_face_attendance_pro/features/widgets/custom_elevatedButton/custom_eleveted_button.dart';
 import 'package:neways_face_attendance_pro/features/widgets/custom_elevatedButton/custom_text.dart';
 import '../../../../core/network/configuration.dart';
 import '../../../../main.dart';
@@ -101,7 +102,6 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     if (!_employeeController.isCameraInitialized.value &&
                         !_employeeController.showPreview.value)
                       Padding(
@@ -277,6 +277,9 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
                                       ),
                                     ),
                                   ),
+                                  // CustomElevatedButton(text: "text popup", onPress: (){
+                                  //   _employeeController.popupReasons(context: context, shortCode: 'CA', message: "hello brothr", attendance: "Check out", warningTextColor: Colors.red, title: 'update', action: "update_limit");
+                                  // },),
                                   Padding(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 10),
@@ -366,16 +369,47 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
                                       children: [
                                         Padding(
                                           padding: const EdgeInsets.all(8.0),
-                                          child: Container(
-                                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), border: Border.all()),
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              child: CameraPreview(
-                                                  _employeeController
-                                                      .cameraController!),
-                                            ),
-                                          ),
+                                          child: _employeeController
+                                                      .capturedImage.value !=
+                                                  null && _employeeController.capturingImage.value == true
+                                              ? Container(
+                                                  height: MediaQuery.of(context).size.height * 0.6,
+                                                  width: MediaQuery.of(context).size.width,
+
+                                                  margin: EdgeInsets.all(0),
+                                                  decoration: BoxDecoration(
+                                                    border: Border.all(
+                                                        color: Colors.grey),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                  ),
+                                                  child: ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                    child: Image.memory(
+                                                      _employeeController
+                                                          .capturedImage.value!,
+                                                      fit: BoxFit.cover,
+                                                    ),
+                                                  ),
+                                                )
+                                              : Container(
+                                                  decoration: BoxDecoration(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              10),
+                                                      border: Border.all()),
+                                                  child: ClipRRect(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                    child: CameraPreview(
+                                                        _employeeController
+                                                            .cameraController!),
+                                                  ),
+                                                ),
                                         ),
                                         Positioned(
                                           top: 0,
@@ -418,33 +452,60 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
                                           ),
                                         ),
                                         _employeeController
-                                            .capturingImage.value ==
-                                            true ?  Positioned(
-                                            top: 0,
-                                            bottom: 0,
-                                            left: 0,
-                                            right: 0,
-                                            child: Container(
-                                          height: MediaQuery.of(context).size.height * 0.6,
-                                          margin: EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(10),
-                                            color: Colors.grey.withValues(alpha: 0.6),
-                                          ),
-                                          child: Column(
-
-                                            children: [
-                                              Expanded(child: Center(child: CustomSimpleText(text: "Image already taken. Now processing.....", color: AppColorsList.white,))),
-
-                                              Padding(
-                                                padding: const EdgeInsets.only(bottom: 20),
-                                                child: Align(
-                                                    alignment: Alignment.bottomCenter,
-                                                    child: WaveDotsAnimation(dotSize: 8.3,),),
-                                              ),
-                                            ],
-                                          ),
-                                        )) : const SizedBox.shrink()
+                                                    .capturingImage.value ==
+                                                true
+                                            ? Positioned(
+                                                top: 0,
+                                                bottom: 0,
+                                                left: 0,
+                                                right: 0,
+                                                child: Container(
+                                                  height: MediaQuery.of(context)
+                                                          .size
+                                                          .height *
+                                                      0.6,
+                                                  margin: EdgeInsets.all(8),
+                                                  decoration: BoxDecoration(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                    color: Colors.grey
+                                                        .withValues(alpha: 0.6),
+                                                  ),
+                                                  child: Column(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    mainAxisAlignment: MainAxisAlignment.center,
+                                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                                    children: [
+                                                      Expanded(
+                                                        child: Center(
+                                                            child:
+                                                                CustomSimpleText(
+                                                                                                                text:
+                                                          "Image already taken. Now processing.....",
+                                                                                                                color:
+                                                          AppColorsList.white,
+                                                                                                              )),
+                                                      ),
+                                                      // 80.ph,
+                                                      Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .only(
+                                                                bottom: 20),
+                                                        child: Align(
+                                                          alignment: Alignment
+                                                              .bottomCenter,
+                                                          child:
+                                                              WaveDotsAnimation(
+                                                            dotSize: 8.3,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ))
+                                            : const SizedBox.shrink()
                                       ],
                                     ),
                                   ),

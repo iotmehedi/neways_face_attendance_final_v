@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import 'package:neways_face_attendance_pro/core/core/extensions/extensions.dart';
 import 'package:neways_face_attendance_pro/core/utils/common_toast/custom_toast.dart';
 import 'package:neways_face_attendance_pro/features/homepage/data/model/attendance_binding_model.dart';
+import 'package:neways_face_attendance_pro/features/homepage/presentation/controller/reasons_popup_controller.dart';
 import 'package:neways_face_attendance_pro/main.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../../../core/app_component/app_component.dart';
@@ -28,7 +29,7 @@ import '../../domain/usecase/get_employee_face_pass_usecase.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
-class GetEmployeeFaceController extends GetxController {
+class GetEmployeeFaceController extends GetxController with ReasonsPopupController{
   var pickedImage = File("").obs;
   // Employee data
   final getEmployeeFaceModel = GetEmployeeFaceModel().obs;
@@ -198,19 +199,30 @@ class GetEmployeeFaceController extends GetxController {
       final useCase =
       SetAttendancePassUseCase(locator<GetEmployeeFaceRepository>());
       final response = await useCase(attendanceValue: attendanceValue);
-      print("response $response");
+      print("response ${response?['action']}");
       if (response != null) {
-        if (response['message']
-            .contains('You can update the Check-Out time 5 times')) {
-          errorToast(
-            context: context,
-            msg: response['message'],
-          );
+        if (response['action'] != null) {
+          if(response['action'] == "update_limit"){
+            popupReasons(context: context, shortCode: 'CA', message: response['message'], attendance: "Check out", warningTextColor: Colors.red, title: "Request for checkout again", action: response['action']);
+          } else if(response['action'] == "weeken_today"){
+            popupReasons(context: context, shortCode: 'WD', message: response['message'], attendance: "Weekend Request", warningTextColor: Colors.red, title: "Request for weekend duty", action: response['action']);
+          }else if(response['action'] == "holyday_today"){
+            popupReasons(context: context, shortCode: 'HD', message: response['message'], attendance: "Holiday Request", warningTextColor: Colors.red, title: "Request for holyday duty", action: response['action']);
+          }else if(response['action'] == "leave_today"){
+            popupReasons(context: context, shortCode: 'WL', message: response['message'], attendance: "Holiday Request", warningTextColor: Colors.red, title: "Request for widthdraw leave", action: response['action']);
+          }else if(response['action'] == "early_checkout"){
+            popupReasons(context: context, shortCode: 'EO', message: response['message'], attendance: "Early Request", warningTextColor: Colors.red, title: "Request for early checkout", action: response['action']);
+          }else if(response['action'] == "early_checkin"){
+            popupReasons(context: context, shortCode: 'EI', message: response['message'], attendance: "Early check in", warningTextColor: Colors.red, title: "Request for early checkin", action: response['action']);
+          }
         } else {
           final currentStatus = getShiftStatus();
           if (currentStatus == "Check In" || currentStatus == "Late") {
             // Perform check-in
-            final formattedDate = "${DateTime.now().year}/${DateTime.now().month.toString().padLeft(2, '0')}/${DateTime.now().day.toString().padLeft(2, '0')}";
+            final now = DateTime.now();
+            final formattedDate =
+                "${now.hour.toString().padLeft(2, '0')}:"  // Hours (24-hour format)
+                "${now.minute.toString().padLeft(2, '0')}";  // Minutes
 
             box.write("checkedIn", formattedDate);
             performCheckIn();
@@ -218,16 +230,20 @@ class GetEmployeeFaceController extends GetxController {
           } else if (currentStatus == "Check Out" ||
               currentStatus == "Checked Out") {
             // Perform check-out
-            final formattedDate = "${DateTime.now().year}/${DateTime.now().month.toString().padLeft(2, '0')}/${DateTime.now().day.toString().padLeft(2, '0')}";
-
+            final now = DateTime.now();
+            final formattedDate =
+                "${now.hour.toString().padLeft(2, '0')}:"  // Hours (24-hour format)
+                "${now.minute.toString().padLeft(2, '0')}";
             box.write("checkedOut", formattedDate);
             performCheckOut();
             successToast(context: context, msg: "Checked out successfully!");
           } else if (currentStatus == "On Duty") {
             // Perform check-out
             performCheckOut();
-            final formattedDate = "${DateTime.now().year}/${DateTime.now().month.toString().padLeft(2, '0')}/${DateTime.now().day.toString().padLeft(2, '0')}";
-
+            final now = DateTime.now();
+            final formattedDate =
+                "${now.hour.toString().padLeft(2, '0')}:"  // Hours (24-hour format)
+                "${now.minute.toString().padLeft(2, '0')}";
             box.write("checkedOut", formattedDate);
             successToast(context: context, msg: "Checked out successfully!");
           } else if (currentStatus == "Already Checked In") {
@@ -238,12 +254,14 @@ class GetEmployeeFaceController extends GetxController {
                 context: context, msg: "You've already checked out today");
           } else {
             successToast(context: context, msg: "${response['message']}");
+            print("mehedi mehedi");
           }
         }
       } else {
         throw Exception('No employee data received');
       }
     } catch (e) {
+      print("mehedi $e");
       capturingImage.value = false;
       errorMessage.value = 'Failed to load employees: ${e.toString()}';
     } finally {
@@ -260,7 +278,7 @@ class GetEmployeeFaceController extends GetxController {
     capturingImage.value = true;
     try {
       // Stop the image stream temporarily
-      cameraController!.stopImageStream();
+      // cameraController!.stopImageStream();
 
       final XFile picture = await cameraController!.takePicture();
       final File imageFile = File(picture.path);
@@ -285,7 +303,7 @@ class GetEmployeeFaceController extends GetxController {
 
       capturedImage.value = processedImage;
       // showPreview.value = true;
-
+      // cameraController!.stopImageStream();
       imageMatching(image: pickedImage.value, context: context);
       // return pickedImage.value;
     } catch (e) {
@@ -613,7 +631,7 @@ class GetEmployeeFaceController extends GetxController {
 
     final isCheckedIn = box.read("isCheckedIn") as bool? ?? false;
     final isCheckedOut = box.read("isCheckedOut") as bool? ?? false;
-    print("this is check in time e $isCheckedIn}");
+
     if (isCheckedIn && isCheckedOut) {
       return "Update Checked Out";
     }
@@ -648,7 +666,7 @@ class GetEmployeeFaceController extends GetxController {
           if (nowMinutes >= (endMinutes - 20)) {
             return "Update Check Out";
           }
-          return "Checkout pass";
+          return "Pass for Checkout";
         }
         return nowMinutes > startMinutes ? "Late Attendance" : "Early Bird";
       }
@@ -676,7 +694,7 @@ class GetEmployeeFaceController extends GetxController {
           if (nowMinutes >= (endMinutes - 20)) {
             return "Update Check Out";
           }
-          return "Checkout pass";
+          return "Pass for Checkout";
         }
         return nowMinutes > startMinutes ? "Late Attendance" : "Early Bird";
       }
