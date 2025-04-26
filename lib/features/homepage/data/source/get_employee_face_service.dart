@@ -14,12 +14,10 @@ class GetEmployeeFaceService {
       path: NetworkConfiguration.getEmployeeFace,
       responseCallback: (response, message) {
         var products = GetEmployeeFaceModel.fromJson(response);
-        print(
-            "this is value image ${products.employeeFaceAttendance?.first.imageUrl}");
+
         apiResponse = Response.success(products);
       },
       failureCallback: (message, status) {
-        print("this is value image error $message $status");
         apiResponse = Response.error(message, status);
       },
     );
@@ -61,7 +59,6 @@ class GetEmployeeFaceService {
         apiResponse = Response.success(products);
       },
       failureCallback: (message, status) {
-        print("this is value image error $message $status");
         apiResponse = Response.error(message, status);
       },
     );

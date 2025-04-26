@@ -1,7 +1,4 @@
-import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:camera/camera.dart';
@@ -11,14 +8,15 @@ import 'package:neways_face_attendance_pro/core/utils/common_toast/custom_toast.
 import 'package:neways_face_attendance_pro/core/utils/consts/app_colors.dart';
 import 'package:neways_face_attendance_pro/core/utils/consts/app_sizes.dart';
 import 'package:neways_face_attendance_pro/features/widgets/cached_image_network/custom_cached_image_network.dart';
-import 'package:neways_face_attendance_pro/features/widgets/custom_elevatedButton/custom_eleveted_button.dart';
 import 'package:neways_face_attendance_pro/features/widgets/custom_elevatedButton/custom_text.dart';
 import '../../../../core/network/configuration.dart';
 import '../../../../main.dart';
+import '../../../widgets/circular_dot_animation/circular_dot_animation.dart';
 import '../../../widgets/wave_loading/web_loading.dart';
 import '../controller/get_employee_face_controller.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/routes/router.dart';
+import '../services/permission_handler.dart';
 
 class FaceAuthScreen extends StatefulWidget {
   const FaceAuthScreen({super.key});
@@ -155,13 +153,17 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
                                     )),
                                 5.ph,
                                 Align(
-                                    alignment: Alignment.center,
-                                    child: CustomSimpleText(
-                                      text: _employeeController.formatTime(
-                                          box.read("dutyStartTime")),
-                                      color: AppColorsList.blue,
-                                      fontWeight: FontWeight.bold,
-                                    )),
+                                  alignment: Alignment.center,
+                                  child: CustomSimpleText(
+                                    text: _employeeController.formatTime(
+                                        box.read("dutyStartTime") ?? ""
+                                    ).isEmpty
+                                        ? "00:00"
+                                        : _employeeController.formatTime(box.read("dutyStartTime") ?? ""),
+                                    color: AppColorsList.blue,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
 
                                 Align(
                                     alignment: Alignment.center,
@@ -172,13 +174,18 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
                                     )),
                                 5.ph,
                                 Align(
-                                    alignment: Alignment.center,
-                                    child: CustomSimpleText(
-                                      text: _employeeController
-                                          .formatTime(box.read("dutyEndTime")),
-                                      color: AppColorsList.red,
-                                      fontWeight: FontWeight.bold,
-                                    )),
+                                  alignment: Alignment.center,
+                                  child: CustomSimpleText(
+                                    text: _employeeController.formatTime(
+                                        box.read("dutyEndTime") ?? ""
+                                    ).isEmpty
+                                        ? "00:00"
+                                        : _employeeController.formatTime(box.read("dutyEndTime") ?? ""),
+                                    color: AppColorsList.blue,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+
 
                                 // CustomRichText(
                                 //   title: box.read("dutyEndTime"),
@@ -229,49 +236,79 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
                                           ),
                                         ),
                                         onPressed: _employeeController
-                                                    .isImageHave.value ==
-                                                false
-                                            ? () {
-                                                errorToast(
-                                                    context: context,
-                                                    msg:
-                                                        "No Image found. Please contact with HR");
-                                              }
-                                            : () async {
-                                                _employeeController
-                                                    .resetCameraState();
-                                                WidgetsBinding.instance
-                                                    .addPostFrameCallback((_) {
-                                                  _employeeController
-                                                      .initializeCamera(
-                                                          context);
-                                                });
-                                              },
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
+                                                    .isEmployeeFaceLoading
+                                                    .value ==
+                                                true
+                                            ? null
+                                            : _employeeController
+                                                        .isImageHave.value ==
+                                                    false
+                                                ? () {
+                                                    errorToast(
+                                                        context: context,
+                                                        msg:
+                                                            "No Image found. Please contact with HR");
+                                                  }
+                                                : () async {
+                                                    bool granted =
+                                                        await _employeeController
+                                                            .getNetworkInfo(
+                                                                context);
+                                                    if (granted) {
+                                                      if(_employeeController.isWifiMatched.value == false && box.read("is_attendance_white_list") == 0){
+                                                        errorToast(context: context, msg: "Connect with authenticate wifi");
+                                                      }else{
+                                                        _employeeController
+                                                            .resetCameraState();
+                                                        WidgetsBinding.instance
+                                                            .addPostFrameCallback(
+                                                                (_) {
+                                                              _employeeController
+                                                                  .initializeCamera(
+                                                                  context);
+                                                            });
+                                                      }
+                                                    }
+                                                  },
+                                        child: Stack(
+                                          alignment: Alignment.center,
                                           children: [
-                                            CustomSimpleText(
-                                              text: _employeeController
-                                                  .getShiftStatusTitle(),
-                                              color: AppColorsList.white,
+                                            Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                CustomSimpleText(
+                                                  text: _employeeController
+                                                      .getShiftStatusTitle(),
+                                                  color: AppColorsList.white,
+                                                ),
+                                                10.ph,
+                                                Text(
+                                                  DateFormat('hh:mm a')
+                                                      .format(DateTime.now()),
+                                                  style: const TextStyle(
+                                                      fontSize: 18,
+                                                      color: Colors.white),
+                                                ),
+                                                const SizedBox(height: 8),
+                                                Text(
+                                                  _employeeController
+                                                      .getShiftStatus(),
+                                                  style: TextStyle(
+                                                      fontSize: 22,
+                                                      color: Colors.white,
+                                                      fontWeight: FontWeight.bold),
+                                                ),
+                                              ],
                                             ),
-                                            10.ph,
-                                            Text(
-                                              DateFormat('hh:mm a')
-                                                  .format(DateTime.now()),
-                                              style: const TextStyle(
-                                                  fontSize: 18,
-                                                  color: Colors.white),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Text(
-                                              _employeeController
-                                                  .getShiftStatus(),
-                                              style: TextStyle(
-                                                  fontSize: 22,
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold),
-                                            ),
+                                            _employeeController
+                                                .isEmployeeFaceLoading.value ==
+                                                true
+                                                ? const CircularDotsAnimation(
+                                              dotSize: 8,
+                                              radius: 20,
+                                              padding: 1,
+                                            )
+                                                : SizedBox.shrink()
                                           ],
                                         ),
                                       ),
@@ -370,12 +407,21 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
                                         Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: _employeeController
-                                                      .capturedImage.value !=
-                                                  null && _employeeController.capturingImage.value == true
+                                                          .capturedImage
+                                                          .value !=
+                                                      null &&
+                                                  _employeeController
+                                                          .capturingImage
+                                                          .value ==
+                                                      true
                                               ? Container(
-                                                  height: MediaQuery.of(context).size.height * 0.6,
-                                                  width: MediaQuery.of(context).size.width,
-
+                                                  height: MediaQuery.of(context)
+                                                          .size
+                                                          .height *
+                                                      0.6,
+                                                  width: MediaQuery.of(context)
+                                                      .size
+                                                      .width,
                                                   margin: EdgeInsets.all(0),
                                                   decoration: BoxDecoration(
                                                     border: Border.all(
@@ -473,19 +519,24 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
                                                         .withValues(alpha: 0.6),
                                                   ),
                                                   child: Column(
-                                                    mainAxisSize: MainAxisSize.min,
-                                                    mainAxisAlignment: MainAxisAlignment.center,
-                                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .center,
                                                     children: [
                                                       Expanded(
                                                         child: Center(
                                                             child:
                                                                 CustomSimpleText(
-                                                                                                                text:
-                                                          "Image already taken. Now processing.....",
-                                                                                                                color:
-                                                          AppColorsList.white,
-                                                                                                              )),
+                                                          text:
+                                                              "Image already taken. Now processing.....",
+                                                          color: AppColorsList
+                                                              .white,
+                                                        )),
                                                       ),
                                                       // 80.ph,
                                                       Padding(

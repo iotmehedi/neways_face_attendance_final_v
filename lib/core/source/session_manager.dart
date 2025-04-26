@@ -37,6 +37,7 @@ class SessionManager {
       box.write("dutyStartTime", loginModelData?.user?.startTime);
       box.write("dutyEndTime", loginModelData?.user?.endTime);
       box.write("dutyEndTime", loginModelData?.user?.endTime);
+      box.write("is_attendance_white_list", loginModelData?.user?.isAttendanceWhiteList);
       box.write("checkedInTime", loginModelData?.attendance?.checkinTime);
       box.write("checkedOutTime", loginModelData?.attendance?.checkoutTime);
       box.write('token', loginModelData?.accessToken);

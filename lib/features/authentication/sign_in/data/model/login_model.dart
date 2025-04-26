@@ -93,6 +93,7 @@ class User {
   String? endMin;
   String? endAmpm;
   int? includeMealBreak;
+  int? isAttendanceWhiteList;
 
   User(
       {this.id,
@@ -157,7 +158,9 @@ class User {
         this.endHour,
         this.endMin,
         this.endAmpm,
-        this.includeMealBreak});
+        this.includeMealBreak,
+      this.isAttendanceWhiteList,
+      });
 
   User.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -223,6 +226,7 @@ class User {
     endMin = json['end_min'];
     endAmpm = json['end_ampm'];
     includeMealBreak = json['include_meal_break'];
+    isAttendanceWhiteList = json['is_attendance_white_list'];
   }
 
   Map<String, dynamic> toJson() {
@@ -290,6 +294,7 @@ class User {
     data['end_min'] = this.endMin;
     data['end_ampm'] = this.endAmpm;
     data['include_meal_break'] = this.includeMealBreak;
+    data['is_attendance_white_list'] = this.isAttendanceWhiteList;
     return data;
   }
 }

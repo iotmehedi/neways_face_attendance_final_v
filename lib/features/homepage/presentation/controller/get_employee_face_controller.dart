@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
@@ -10,12 +11,14 @@ import 'package:hexcolor/hexcolor.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 import 'package:intl/intl.dart';
+import 'package:network_info_plus/network_info_plus.dart';
 import 'package:neways_face_attendance_pro/core/core/extensions/extensions.dart';
 import 'package:neways_face_attendance_pro/core/utils/common_toast/custom_toast.dart';
 import 'package:neways_face_attendance_pro/features/homepage/data/model/attendance_binding_model.dart';
 import 'package:neways_face_attendance_pro/features/homepage/presentation/controller/reasons_popup_controller.dart';
 import 'package:neways_face_attendance_pro/main.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/app_component/app_component.dart';
 import '../../../../core/routes/route_name.dart';
 import '../../../../core/routes/router.dart';
@@ -50,12 +53,13 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
   CameraController? cameraController;
   var showPreview = false.obs;
   Rx<Uint8List?> capturedImage = Rx<Uint8List?>(null);
-
+  final NetworkInfo networkInfo = NetworkInfo();
+  var wifiNameValue = "".obs;
   var isCameraInitialized = false.obs;
 
   var similarity = "".obs;
   var trialNumber = 1.obs;
-  var isMatchings = false.obs;
+  var isWifiMatched = false.obs;
   var capturingImage = false.obs;
   dynamic matchedEmployee;
   var currentTime = ''.obs;
@@ -63,12 +67,60 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
   @override
   void onInit() async {
     super.onInit();
+    // getNetworkInfo();
     updateTime();
+    attendanceBinding();
     // Update time every second
     timer = Timer.periodic(Duration(seconds: 1), (timer) => updateTime());
     await getEmployeeFacetFunc();
 
   }
+  Future<bool> getNetworkInfo(BuildContext context) async {
+
+      // Check and request location permission
+      var status = await Permission.locationWhenInUse.status;
+      if (!status.isGranted) {
+        status = await Permission.locationWhenInUse.request();
+
+        if (!status.isGranted) {
+          if (status.isPermanentlyDenied) {
+            await showDialog(
+              context: context,
+              builder: (_) => AlertDialog(
+                title: const Text("Permission Required"),
+                content: const Text("Please enable location permission from settings to access WiFi information."),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Cancel"),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      openAppSettings();
+                    },
+                    child: const Text("Open Settings"),
+                  ),
+                ],
+              ),
+            );
+          }
+          return false;
+        }
+      }
+        final wifiName = await networkInfo.getWifiName();
+        wifiNameValue.value = wifiName ?? '';
+        for(var wifi in attendanceBindingModel.value.attendanceBinding ?? []) {
+          print("is wifi matched name ${wifi.wifiAddress} ${wifiNameValue.value.replaceAll('"', '')}");
+          if(wifi.wifiAddress == wifiNameValue.value.replaceAll('"', '')){
+            isWifiMatched.value = true;
+          }
+        }
+        print("is wifi matched ${isWifiMatched.value}");
+        print("wifi name ${wifiNameValue.value}");
+      return isWifiMatched.value;
+  }
+
   @override
   void onClose() {
     timer?.cancel(); // Cancel timer when controller is closed
@@ -181,6 +233,7 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
       if (response?.data?.attendanceBinding != null) {
         attendanceBindingModel.value =
             response?.data ?? AttendanceBindingModel();
+
       } else {
         print("wifi information not found");
       }
@@ -643,8 +696,6 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
     // Get shift times (replace with your actual data source)
     final startTimeStr = box.read("dutyStartTime") ?? "09:00";
     final endTimeStr = box.read("dutyEndTime") ?? "17:00";
-    print("this is value ${box.read("dutyStartTime")}");
-    print("this is value ${box.read("dutyEndTime")}");
     TimeOfDay parseTime(String timeStr) {
       try {
         final parts = timeStr.split(':');
@@ -773,8 +824,6 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
                         RouteGenerator.pushNamedAndRemoveAll(
                             navigatorKey.currentContext!, Routes.signinPage);
                         box.erase();
-                        Get.deleteAll();
-                        disposes();
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width,
