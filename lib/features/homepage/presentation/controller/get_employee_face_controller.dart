@@ -88,31 +88,21 @@ checkWifi() async {
     } else {
       wifiName = await networkInfo.getWifiName();
     }
-
     wifiNameValue.value = wifiName ?? '';
 
     // Reset to false before checking
     isWifiMatched.value = false;
-
     for (var wifi in attendanceBindingModel.value.attendanceBinding ?? []) {
-
       if (wifi.wifiAddress == wifiNameValue.value.replaceAll('"', '')) {
-        print("is wifi matched name pp2 ${wifiNameValue.value.replaceAll('"', '')} ${wifiNameValue.value}");
         isWifiMatched.value = true;
         break; // Exit loop once we find a match
       }else{
-        print("is wifi matched name pp1 ${wifiNameValue.value.replaceAll('"', '')} ${wifiNameValue.value}");
         isWifiMatched.value = false;
         break;
       }
     }
-
-    print("is wifi matched ${isWifiMatched.value}");
-    print("wifi name ${wifiNameValue.value}");
-
   } catch (e) {
     print("Error getting wifi info: $e");
-
   }
   update();
 }
