@@ -75,52 +75,47 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
     await getEmployeeFacetFunc();
 
   }
-  Future<bool> getNetworkInfo(BuildContext context) async {
 
-      // Check and request location permission
-      var status = await Permission.locationWhenInUse.status;
-      if (!status.isGranted) {
-        status = await Permission.locationWhenInUse.request();
-
-        if (!status.isGranted) {
-          if (status.isPermanentlyDenied) {
-            await showDialog(
-              context: context,
-              builder: (_) => AlertDialog(
-                title: const Text("Permission Required"),
-                content: const Text("Please enable location permission from settings to access WiFi information."),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text("Cancel"),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      openAppSettings();
-                    },
-                    child: const Text("Open Settings"),
-                  ),
-                ],
-              ),
-            );
-          }
-          return false;
-        }
+checkWifi() async {
+  try {
+    String? wifiName = '';
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+      if (await Permission.locationWhenInUse.request().isGranted) {
+        wifiName = await networkInfo.getWifiName();
+      } else {
+        wifiName = 'Unauthorized to get Wifi Name';
       }
-        final wifiName = await networkInfo.getWifiName();
-        wifiNameValue.value = wifiName ?? '';
-        for(var wifi in attendanceBindingModel.value.attendanceBinding ?? []) {
-          print("is wifi matched name ${wifi.wifiAddress} ${wifiNameValue.value.replaceAll('"', '')}");
-          if(wifi.wifiAddress == wifiNameValue.value.replaceAll('"', '')){
-            isWifiMatched.value = true;
-          }
-        }
-        print("is wifi matched ${isWifiMatched.value}");
-        print("wifi name ${wifiNameValue.value}");
-      return isWifiMatched.value;
-  }
+    } else {
+      wifiName = await networkInfo.getWifiName();
+    }
 
+    wifiNameValue.value = wifiName ?? '';
+
+    // Reset to false before checking
+    isWifiMatched.value = false;
+
+    for (var wifi in attendanceBindingModel.value.attendanceBinding ?? []) {
+
+      if (wifi.wifiAddress == wifiNameValue.value.replaceAll('"', '')) {
+        print("is wifi matched name pp2 ${wifiNameValue.value.replaceAll('"', '')} ${wifiNameValue.value}");
+        isWifiMatched.value = true;
+        break; // Exit loop once we find a match
+      }else{
+        print("is wifi matched name pp1 ${wifiNameValue.value.replaceAll('"', '')} ${wifiNameValue.value}");
+        isWifiMatched.value = false;
+        break;
+      }
+    }
+
+    print("is wifi matched ${isWifiMatched.value}");
+    print("wifi name ${wifiNameValue.value}");
+
+  } catch (e) {
+    print("Error getting wifi info: $e");
+
+  }
+  update();
+}
   @override
   void onClose() {
     timer?.cancel(); // Cancel timer when controller is closed

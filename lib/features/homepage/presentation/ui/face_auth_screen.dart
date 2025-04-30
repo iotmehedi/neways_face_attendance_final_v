@@ -203,196 +203,200 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
                     SizedBox(
                       // height: AppSizes.newSize(90),
                       width: MediaQuery.of(context).size.width,
-                      child: Column(
+                      child: Obx(()=> Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           if (!_employeeController.isCameraInitialized.value &&
                               !_employeeController.showPreview.value)
-                            Obx(
-                              () => Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Center(
-                                    child: Container(
-                                      height: 200,
-                                      width: 200,
-                                      decoration: BoxDecoration(
-                                        gradient: _employeeController
-                                            .getButtonColor(),
-                                        borderRadius:
-                                            BorderRadius.circular(500),
-                                      ),
-                                      child: ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.transparent,
-                                          shadowColor: Colors.transparent,
-                                          // backgroundColor:
-                                          //     _employeeController.getButtonColor(),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Center(
+                                  child: Container(
+                                    height: 200,
+                                    width: 200,
+                                    decoration: BoxDecoration(
+                                      gradient: _employeeController
+                                          .getButtonColor(),
+                                      borderRadius:
+                                      BorderRadius.circular(500),
+                                    ),
+                                    child: Obx(()=> ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.transparent,
+                                        shadowColor: Colors.transparent,
+                                        // backgroundColor:
+                                        //     _employeeController.getButtonColor(),
 
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(500),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                          BorderRadius.circular(500),
+                                        ),
+                                      ),
+                                      onPressed: _employeeController
+                                          .isEmployeeFaceLoading
+                                          .value ==
+                                          true
+                                          ? null
+                                          : _employeeController
+                                          .isImageHave.value ==
+                                          false
+                                          ? () {
+                                        errorToast(
+                                            context: context,
+                                            msg:
+                                            "No Image found. Please contact with HR");
+                                      }
+                                          : () async {
+
+                                        // bool granted = await _employeeController.getNetworkInfo(context);
+                                       await _employeeController.checkWifi();
+                                        print("is wifi matched name pp ${_employeeController.isWifiMatched.value} ${box.read("is_attendance_white_list")}");
+                                        // if (granted) {
+                                       if(_employeeController.attendanceBindingModel.value.approval == true){
+                                         _employeeController.resetCameraState();
+                                         WidgetsBinding.instance.addPostFrameCallback((_) {
+                                           _employeeController.initializeCamera(context);
+                                         });
+                                       }else if(_employeeController.isWifiMatched.value == false && _employeeController.wifiNameValue.value.isEmpty){
+                                         _employeeController.popupReasons(context: context, shortCode: 'wifi', message: "No Wifi", attendance: "Without wifi.", warningTextColor: Colors.red, title: "Request for checkout again", action: "wifi_problem");
+                                       }
+                                      else if (_employeeController.isWifiMatched.value == false && box.read("is_attendance_white_list") == 0) {
+                                          errorToast(context: context, msg: "Connect with authenticate wifi");
+                                        } else {
+
+                                          _employeeController.resetCameraState();
+                                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                                            _employeeController.initializeCamera(context);
+                                          });
+
+                                        }
+                                        // }
+                                      },
+                                      child: Stack(
+                                        alignment: Alignment.center,
+                                        children: [
+                                          Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              CustomSimpleText(
+                                                text: _employeeController
+                                                    .getShiftStatusTitle(),
+                                                color: AppColorsList.white,
+                                              ),
+                                              10.ph,
+                                              Text(
+                                                DateFormat('hh:mm a')
+                                                    .format(DateTime.now()),
+                                                style: const TextStyle(
+                                                    fontSize: 18,
+                                                    color: Colors.white),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                _employeeController
+                                                    .getShiftStatus(),
+                                                style: TextStyle(
+                                                    fontSize: 22,
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.bold),
+                                              ),
+                                            ],
                                           ),
-                                        ),
-                                        onPressed: _employeeController
-                                                    .isEmployeeFaceLoading
-                                                    .value ==
-                                                true
-                                            ? null
-                                            : _employeeController
-                                                        .isImageHave.value ==
-                                                    false
-                                                ? () {
-                                                    errorToast(
-                                                        context: context,
-                                                        msg:
-                                                            "No Image found. Please contact with HR");
-                                                  }
-                                                : () async {
-                                                    bool granted =
-                                                        await _employeeController
-                                                            .getNetworkInfo(
-                                                                context);
-                                                    if (granted) {
-                                                      if(_employeeController.isWifiMatched.value == false && box.read("is_attendance_white_list") == 0){
-                                                        errorToast(context: context, msg: "Connect with authenticate wifi");
-                                                      }else{
-                                                        _employeeController
-                                                            .resetCameraState();
-                                                        WidgetsBinding.instance
-                                                            .addPostFrameCallback(
-                                                                (_) {
-                                                              _employeeController
-                                                                  .initializeCamera(
-                                                                  context);
-                                                            });
-                                                      }
-                                                    }
-                                                  },
-                                        child: Stack(
-                                          alignment: Alignment.center,
-                                          children: [
-                                            Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                CustomSimpleText(
-                                                  text: _employeeController
-                                                      .getShiftStatusTitle(),
-                                                  color: AppColorsList.white,
-                                                ),
-                                                10.ph,
-                                                Text(
-                                                  DateFormat('hh:mm a')
-                                                      .format(DateTime.now()),
-                                                  style: const TextStyle(
-                                                      fontSize: 18,
-                                                      color: Colors.white),
-                                                ),
-                                                const SizedBox(height: 8),
-                                                Text(
-                                                  _employeeController
-                                                      .getShiftStatus(),
-                                                  style: TextStyle(
-                                                      fontSize: 22,
-                                                      color: Colors.white,
-                                                      fontWeight: FontWeight.bold),
-                                                ),
-                                              ],
-                                            ),
-                                            _employeeController
-                                                .isEmployeeFaceLoading.value ==
-                                                true
-                                                ? const CircularDotsAnimation(
-                                              dotSize: 8,
-                                              radius: 20,
-                                              padding: 1,
-                                            )
-                                                : SizedBox.shrink()
-                                          ],
-                                        ),
+                                          _employeeController
+                                              .isEmployeeFaceLoading.value ==
+                                              true
+                                              ? const CircularDotsAnimation(
+                                            dotSize: 8,
+                                            radius: 20,
+                                            padding: 1,
+                                          )
+                                              : SizedBox.shrink()
+                                        ],
                                       ),
-                                    ),
+                                    )),
                                   ),
-                                  // CustomElevatedButton(text: "text popup", onPress: (){
-                                  //   _employeeController.popupReasons(context: context, shortCode: 'CA', message: "hello brothr", attendance: "Check out", warningTextColor: Colors.red, title: 'update', action: "update_limit");
-                                  // },),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10),
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.start,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        // CustomRichText(
-                                        //   title: box.read("dutyStartTime"),
-                                        //   heading: "Check in:",
-                                        //   headingFontSize: AppSizes.size13,
-                                        //   titleFontSIze: AppSizes.size13,
-                                        //   titleTextColor: AppColorsList.blue,
-                                        // ),
-                                        20.ph,
-                                        box.read("checkedIn") == null
-                                            ? const SizedBox.shrink()
-                                            : Align(
-                                                alignment: Alignment.center,
-                                                child: CustomSimpleText(
-                                                  text: "Today Check In Time",
-                                                  textAlignment:
-                                                      TextAlign.center,
-                                                  fontWeight: FontWeight.bold,
-                                                )),
-                                        5.ph,
-                                        box.read("checkedIn") == null
-                                            ? const SizedBox.shrink()
-                                            : Align(
-                                                alignment: Alignment.center,
-                                                child: CustomSimpleText(
-                                                  text: _employeeController
-                                                      .formatTime(box
-                                                          .read("checkedIn")),
-                                                  color: AppColorsList.blue,
-                                                  fontWeight: FontWeight.bold,
-                                                )),
+                                ),
+                                // CustomElevatedButton(text: "text popup", onPress: (){
+                                //   _employeeController.popupReasons(context: context, shortCode: 'CA', message: "hello brothr", attendance: "Check out", warningTextColor: Colors.red, title: 'update', action: "update_limit");
+                                // },),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10),
+                                  child: Column(
+                                    mainAxisAlignment:
+                                    MainAxisAlignment.start,
+                                    crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                    children: [
+                                      // CustomRichText(
+                                      //   title: box.read("dutyStartTime"),
+                                      //   heading: "Check in:",
+                                      //   headingFontSize: AppSizes.size13,
+                                      //   titleFontSIze: AppSizes.size13,
+                                      //   titleTextColor: AppColorsList.blue,
+                                      // ),
+                                      20.ph,
+                                      box.read("checkedIn") == null
+                                          ? const SizedBox.shrink()
+                                          : Align(
+                                          alignment: Alignment.center,
+                                          child: CustomSimpleText(
+                                            text: "Today Check In Time",
+                                            textAlignment:
+                                            TextAlign.center,
+                                            fontWeight: FontWeight.bold,
+                                          )),
+                                      5.ph,
+                                      box.read("checkedIn") == null
+                                          ? const SizedBox.shrink()
+                                          : Align(
+                                          alignment: Alignment.center,
+                                          child: CustomSimpleText(
+                                            text: _employeeController
+                                                .formatTime(box
+                                                .read("checkedIn")),
+                                            color: AppColorsList.blue,
+                                            fontWeight: FontWeight.bold,
+                                          )),
 
-                                        box.read("checkedOut") == null
-                                            ? const SizedBox.shrink()
-                                            : Align(
-                                                alignment: Alignment.center,
-                                                child: CustomSimpleText(
-                                                  text: "Today Check Out Time",
-                                                  textAlignment:
-                                                      TextAlign.center,
-                                                  fontWeight: FontWeight.bold,
-                                                )),
-                                        5.ph,
-                                        box.read("checkedOut") == null
-                                            ? const SizedBox.shrink()
-                                            : Align(
-                                                alignment: Alignment.center,
-                                                child: CustomSimpleText(
-                                                  text: _employeeController
-                                                      .formatTime(box
-                                                          .read("checkedOut")),
-                                                  color: AppColorsList.red,
-                                                  fontWeight: FontWeight.bold,
-                                                )),
+                                      box.read("checkedOut") == null
+                                          ? const SizedBox.shrink()
+                                          : Align(
+                                          alignment: Alignment.center,
+                                          child: CustomSimpleText(
+                                            text: "Today Check Out Time",
+                                            textAlignment:
+                                            TextAlign.center,
+                                            fontWeight: FontWeight.bold,
+                                          )),
+                                      5.ph,
+                                      box.read("checkedOut") == null
+                                          ? const SizedBox.shrink()
+                                          : Align(
+                                          alignment: Alignment.center,
+                                          child: CustomSimpleText(
+                                            text: _employeeController
+                                                .formatTime(box
+                                                .read("checkedOut")),
+                                            color: AppColorsList.red,
+                                            fontWeight: FontWeight.bold,
+                                          )),
 
-                                        // CustomRichText(
-                                        //   title: box.read("dutyEndTime"),
-                                        //   heading: "Check out:",
-                                        //   headingFontSize: AppSizes.size13,
-                                        //   titleFontSIze: AppSizes.size13,
-                                        //   titleTextColor: AppColorsList.blue,
-                                        // ),
-                                      ],
-                                    ),
+                                      // CustomRichText(
+                                      //   title: box.read("dutyEndTime"),
+                                      //   heading: "Check out:",
+                                      //   headingFontSize: AppSizes.size13,
+                                      //   titleFontSIze: AppSizes.size13,
+                                      //   titleTextColor: AppColorsList.blue,
+                                      // ),
+                                    ],
                                   ),
-                                ],
-                              ),
+                                ),
+                              ],
                             ),
+
 
                           // Camera preview section
                           if (_employeeController.isCameraInitialized.value &&
@@ -407,55 +411,55 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
                                         Padding(
                                           padding: const EdgeInsets.all(8.0),
                                           child: _employeeController
-                                                          .capturedImage
-                                                          .value !=
-                                                      null &&
-                                                  _employeeController
-                                                          .capturingImage
-                                                          .value ==
-                                                      true
+                                              .capturedImage
+                                              .value !=
+                                              null &&
+                                              _employeeController
+                                                  .capturingImage
+                                                  .value ==
+                                                  true
                                               ? Container(
-                                                  height: MediaQuery.of(context)
-                                                          .size
-                                                          .height *
-                                                      0.6,
-                                                  width: MediaQuery.of(context)
-                                                      .size
-                                                      .width,
-                                                  margin: EdgeInsets.all(0),
-                                                  decoration: BoxDecoration(
-                                                    border: Border.all(
-                                                        color: Colors.grey),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10),
-                                                  ),
-                                                  child: ClipRRect(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10),
-                                                    child: Image.memory(
-                                                      _employeeController
-                                                          .capturedImage.value!,
-                                                      fit: BoxFit.cover,
-                                                    ),
-                                                  ),
-                                                )
+                                            height: MediaQuery.of(context)
+                                                .size
+                                                .height *
+                                                0.6,
+                                            width: MediaQuery.of(context)
+                                                .size
+                                                .width,
+                                            margin: EdgeInsets.all(0),
+                                            decoration: BoxDecoration(
+                                              border: Border.all(
+                                                  color: Colors.grey),
+                                              borderRadius:
+                                              BorderRadius.circular(
+                                                  10),
+                                            ),
+                                            child: ClipRRect(
+                                              borderRadius:
+                                              BorderRadius.circular(
+                                                  10),
+                                              child: Image.memory(
+                                                _employeeController
+                                                    .capturedImage.value!,
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          )
                                               : Container(
-                                                  decoration: BoxDecoration(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              10),
-                                                      border: Border.all()),
-                                                  child: ClipRRect(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10),
-                                                    child: CameraPreview(
-                                                        _employeeController
-                                                            .cameraController!),
-                                                  ),
-                                                ),
+                                            decoration: BoxDecoration(
+                                                borderRadius:
+                                                BorderRadius.circular(
+                                                    10),
+                                                border: Border.all()),
+                                            child: ClipRRect(
+                                              borderRadius:
+                                              BorderRadius.circular(
+                                                  10),
+                                              child: CameraPreview(
+                                                  _employeeController
+                                                      .cameraController!),
+                                            ),
+                                          ),
                                         ),
                                         Positioned(
                                           top: 0,
@@ -498,64 +502,64 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
                                           ),
                                         ),
                                         _employeeController
-                                                    .capturingImage.value ==
-                                                true
+                                            .capturingImage.value ==
+                                            true
                                             ? Positioned(
-                                                top: 0,
-                                                bottom: 0,
-                                                left: 0,
-                                                right: 0,
-                                                child: Container(
-                                                  height: MediaQuery.of(context)
-                                                          .size
-                                                          .height *
-                                                      0.6,
-                                                  margin: EdgeInsets.all(8),
-                                                  decoration: BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            10),
-                                                    color: Colors.grey
-                                                        .withValues(alpha: 0.6),
-                                                  ),
-                                                  child: Column(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Expanded(
-                                                        child: Center(
-                                                            child:
-                                                                CustomSimpleText(
+                                            top: 0,
+                                            bottom: 0,
+                                            left: 0,
+                                            right: 0,
+                                            child: Container(
+                                              height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                                  0.6,
+                                              margin: EdgeInsets.all(8),
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                BorderRadius.circular(
+                                                    10),
+                                                color: Colors.grey
+                                                    .withValues(alpha: 0.6),
+                                              ),
+                                              child: Column(
+                                                mainAxisSize:
+                                                MainAxisSize.min,
+                                                mainAxisAlignment:
+                                                MainAxisAlignment
+                                                    .center,
+                                                crossAxisAlignment:
+                                                CrossAxisAlignment
+                                                    .center,
+                                                children: [
+                                                  Expanded(
+                                                    child: Center(
+                                                        child:
+                                                        CustomSimpleText(
                                                           text:
-                                                              "Image already taken. Now processing.....",
+                                                          "Image already taken. Now processing.....",
                                                           color: AppColorsList
                                                               .white,
                                                         )),
-                                                      ),
-                                                      // 80.ph,
-                                                      Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .only(
-                                                                bottom: 20),
-                                                        child: Align(
-                                                          alignment: Alignment
-                                                              .bottomCenter,
-                                                          child:
-                                                              WaveDotsAnimation(
-                                                            dotSize: 8.3,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
                                                   ),
-                                                ))
+                                                  // 80.ph,
+                                                  Padding(
+                                                    padding:
+                                                    const EdgeInsets
+                                                        .only(
+                                                        bottom: 20),
+                                                    child: Align(
+                                                      alignment: Alignment
+                                                          .bottomCenter,
+                                                      child:
+                                                      WaveDotsAnimation(
+                                                        dotSize: 8.3,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ))
                                             : const SizedBox.shrink()
                                       ],
                                     ),
@@ -579,38 +583,38 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
                                       padding: EdgeInsets.all(10),
                                       decoration: BoxDecoration(
                                           borderRadius:
-                                              BorderRadius.circular(10),
+                                          BorderRadius.circular(10),
                                           color: AppColorsList.green1),
                                       child: _employeeController
-                                                  .capturingImage.value ==
-                                              true
+                                          .capturingImage.value ==
+                                          true
                                           ? Center(
-                                              child: SizedBox(
-                                                  height: 20,
-                                                  width: 20,
-                                                  child:
-                                                      CircularProgressIndicator()),
-                                            )
+                                        child: SizedBox(
+                                            height: 20,
+                                            width: 20,
+                                            child:
+                                            CircularProgressIndicator()),
+                                      )
                                           : Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Icon(
-                                                  Icons.check_circle,
-                                                  color: AppColorsList.white,
-                                                ),
-                                                5.pw,
-                                                CustomSimpleText(
-                                                  text: "Confirm",
-                                                  fontWeight: FontWeight.bold,
-                                                  color: AppColorsList.white,
-                                                  textAlignment:
-                                                      TextAlign.center,
-                                                  textOverFlow:
-                                                      TextOverflow.visible,
-                                                ),
-                                              ],
-                                            ),
+                                        mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.check_circle,
+                                            color: AppColorsList.white,
+                                          ),
+                                          5.pw,
+                                          CustomSimpleText(
+                                            text: "Confirm",
+                                            fontWeight: FontWeight.bold,
+                                            color: AppColorsList.white,
+                                            textAlignment:
+                                            TextAlign.center,
+                                            textOverFlow:
+                                            TextOverflow.visible,
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -643,7 +647,7 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
                                     const SizedBox(height: 20),
                                     Row(
                                       mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                      MainAxisAlignment.center,
                                       children: [
                                         ElevatedButton(
                                           style: ElevatedButton.styleFrom(
@@ -707,7 +711,7 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
                               ],
                             ),
                         ],
-                      ),
+                      )),
                     ),
                   ],
                 ),

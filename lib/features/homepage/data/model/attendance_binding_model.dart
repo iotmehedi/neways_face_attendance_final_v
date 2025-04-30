@@ -1,11 +1,13 @@
 class AttendanceBindingModel {
   bool? success;
+  bool? approval;
   List<AttendanceBinding>? attendanceBinding;
 
-  AttendanceBindingModel({this.success, this.attendanceBinding});
+  AttendanceBindingModel({this.success, this.approval, this.attendanceBinding});
 
   AttendanceBindingModel.fromJson(Map<String, dynamic> json) {
     success = json['success'];
+    approval = json['approval'];
     if (json['attendanceBinding'] != null) {
       attendanceBinding = <AttendanceBinding>[];
       json['attendanceBinding'].forEach((v) {
@@ -17,6 +19,7 @@ class AttendanceBindingModel {
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
     data['success'] = this.success;
+    data['approval'] = this.approval;
     if (this.attendanceBinding != null) {
       data['attendanceBinding'] =
           this.attendanceBinding!.map((v) => v.toJson()).toList();
