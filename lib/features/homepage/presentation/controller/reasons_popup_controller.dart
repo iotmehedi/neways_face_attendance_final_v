@@ -168,6 +168,7 @@ mixin ReasonsPopupController on GetxController {
       context: context,
       builder: (context) {
         return Dialog(
+
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -201,74 +202,70 @@ mixin ReasonsPopupController on GetxController {
                   10.ph,
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                    child: Row(
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Expanded(
-                          child: InkWell(
-                            onTap: () {
-                              Navigator.pop(context); // Close the current dialog
-                              showReasonFiled(
-                                  navigatorKey.currentContext!, attendance,
-                                  shortCode: shortCode,
-                                  title: title,
-                                  action:
-                                      action); // Now safely show the next dialog
-                            },
-                            child: Container(
-                              padding: EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(5),
-                                border: Border.all(
-                                  color: AppColorsList.green.withValues(alpha: 0.4),
-                                ),
-                                color: AppColorsList.green1,
+                        InkWell(
+                          onTap: () {
+                            Navigator.pop(context); // Close the current dialog
+                            showReasonFiled(
+                                navigatorKey.currentContext!, attendance,
+                                shortCode: shortCode,
+                                title: title,
+                                action:
+                                    action); // Now safely show the next dialog
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(8),
+                            width: MediaQuery.of(context).size.width,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(5),
+                              border: Border.all(
+                                color: AppColorsList.green.withValues(alpha: 0.4),
                               ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.check,
-                                    size: AppSizes.newSize(2),
-                                    color: AppColorsList.white,
-                                  ),
-                                  Expanded(
-                                    child: CustomSimpleText(
-                                      text: attendance,
-                                      fontSize: AppSizes.size11,
-                                      color: AppColorsList.white,
-                                      textAlignment: TextAlign.center,
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              color: AppColorsList.green1,
                             ),
-                          ),
-                        ),
-                        10.pw,
-                        Expanded(
-                          child: InkWell(
-                            onTap: () {
-                              Navigator.pop(context);
-                            },
-                            child: Expanded(
-                              child: Container(
-                                padding: EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(5),
-                                  border: Border.all(
-                                    color: AppColorsList.red.withValues(alpha: 0.4),
-                                  ),
-                                  color: AppColorsList.red,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.check,
+                                  size: AppSizes.newSize(2),
+                                  color: AppColorsList.white,
                                 ),
-                                child: Expanded(
+                                Expanded(
                                   child: CustomSimpleText(
-                                    text: "X No, Thanks",
+                                    text: attendance,
                                     fontSize: AppSizes.size11,
                                     color: AppColorsList.white,
                                     textAlignment: TextAlign.center,
                                   ),
                                 ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        10.ph,
+                        InkWell(
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(8),
+                            width: MediaQuery.of(context).size.width,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(5),
+                              border: Border.all(
+                                color: AppColorsList.red.withValues(alpha: 0.4),
+                              ),
+                              color: AppColorsList.red,
+                            ),
+                            child: Expanded(
+                              child: CustomSimpleText(
+                                text: "X No, Thanks",
+                                fontSize: AppSizes.size11,
+                                color: AppColorsList.white,
+                                textAlignment: TextAlign.center,
                               ),
                             ),
                           ),

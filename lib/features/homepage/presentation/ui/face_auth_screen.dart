@@ -260,7 +260,7 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
                                            _employeeController.initializeCamera(context);
                                          });
                                        }else if(_employeeController.isWifiMatched.value == false && _employeeController.wifiNameValue.value.isEmpty){
-                                         _employeeController.popupReasons(context: context, shortCode: 'wifi', message: "No Wifi", attendance: "Without wifi.", warningTextColor: Colors.red, title: "Request for checkout again", action: "wifi_problem");
+                                         _employeeController.popupReasons(context: context, shortCode: 'wifi', message: "No Attendance Wifi Detect", attendance: "Request for Without attendance wifi.", warningTextColor: Colors.red, title: "Request for checkout again", action: "wifi_problem");
                                        }
                                       else if (_employeeController.isWifiMatched.value == false && box.read("is_attendance_white_list") == 0) {
                                           errorToast(context: context, msg: "Connect with authenticate wifi");

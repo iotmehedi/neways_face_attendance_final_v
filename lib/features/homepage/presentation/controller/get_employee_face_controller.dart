@@ -89,7 +89,6 @@ checkWifi() async {
       wifiName = await networkInfo.getWifiName();
     }
     wifiNameValue.value = wifiName ?? '';
-
     // Reset to false before checking
     isWifiMatched.value = false;
     for (var wifi in attendanceBindingModel.value.attendanceBinding ?? []) {
