@@ -1,8 +1,8 @@
 class SignOutModel {
-  String? error;
-  String? totalFound;
-  bool? valid;
-  String? message;
+  var error;
+  var totalFound;
+  var valid;
+  var message;
 
   SignOutModel({this.error, this.totalFound, this.valid, this.message});
 

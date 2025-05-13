@@ -194,11 +194,17 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
                                 //   titleFontSIze: AppSizes.size13,
                                 //   titleTextColor: AppColorsList.blue,
                                 // ),
+
                               ],
                             ),
                           ],
                         ),
                       ),
+                    20.ph,
+                    // Center(child: CustomSimpleText(text: , fontWeight: FontWeight.w500, fontSize: AppSizes.size12,)),
+                    Visibility(
+                        visible: _employeeController.wifiNameValue.value.isEmpty ? false : true,
+                        child: Center(child: CustomRichText(title: " ${_employeeController.wifiNameValue.value}", heading: "You are connected with", titleFontSIze: AppSizes.size12, titleTextColor: AppColorsList.green, headingFontSize: AppSizes.size12, ))),
                     60.ph,
                     SizedBox(
                       // height: AppSizes.newSize(90),
@@ -252,7 +258,7 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
 
                                         // bool granted = await _employeeController.getNetworkInfo(context);
                                        await _employeeController.checkWifi();
-                                        print("is wifi matched name pp ${_employeeController.isWifiMatched.value} ${box.read("is_attendance_white_list")}");
+                                        print("is wifi matched name pp ${_employeeController.wifiNameValue.value} ${box.read("is_attendance_white_list")}");
                                         // if (granted) {
                                        if(_employeeController.attendanceBindingModel.value.approval == true){
                                          _employeeController.resetCameraState();

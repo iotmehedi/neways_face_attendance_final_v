@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -11,6 +12,7 @@ import 'package:hexcolor/hexcolor.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 import 'package:intl/intl.dart';
+import 'package:location/location.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:neways_face_attendance_pro/core/core/extensions/extensions.dart';
 import 'package:neways_face_attendance_pro/core/utils/common_toast/custom_toast.dart';
@@ -33,6 +35,9 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
 class GetEmployeeFaceController extends GetxController with ReasonsPopupController{
+  final GetEmployeeFaceRepository? repository;
+
+  GetEmployeeFaceController({this.repository});
   var pickedImage = File("").obs;
   // Employee data
   final getEmployeeFaceModel = GetEmployeeFaceModel().obs;
@@ -64,50 +69,101 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
   dynamic matchedEmployee;
   var currentTime = ''.obs;
   Timer? timer;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   @override
   void onInit() async {
     super.onInit();
-    // getNetworkInfo();
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> result) {
+      if (result.contains(ConnectivityResult.wifi)) {
+        checkWifi();
+      } else {
+        // Optionally reset values when not connected to Wi-Fi.
+        wifiNameValue.value = 'Not connected to Wi-Fi';
+        isWifiMatched.value = false;
+        update(); // trigger UI update if using setState.
+      }
+    });
+
+    checkWifi();
     updateTime();
     attendanceBinding();
+
     // Update time every second
     timer = Timer.periodic(Duration(seconds: 1), (timer) => updateTime());
     await getEmployeeFacetFunc();
-
   }
-
-checkWifi() async {
-  try {
-    String? wifiName = '';
-    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-      if (await Permission.locationWhenInUse.request().isGranted) {
-        wifiName = await networkInfo.getWifiName();
+  @override
+  void dispose() {
+    _connectivitySubscription?.cancel();
+    super.dispose();
+  }
+  checkWifi() async {
+    try {
+      String? wifiName = '';
+      if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
+        await isLocationServiceEnabled();
+        if (await Permission.locationWhenInUse.request().isGranted) {
+          print("Location permission granted");
+          try {
+            wifiName = await networkInfo.getWifiName();
+            print("Wi-Fi name retrieved: $wifiName");
+          } catch (e) {
+            print("Failed to get Wi-Fi name: $e");
+            wifiName = 'Error retrieving Wi-Fi name';
+          }
+        } else {
+          print("Location permission denied");
+          wifiName = 'Unauthorized to get Wi-Fi name';
+        }
       } else {
-        wifiName = 'Unauthorized to get Wifi Name';
+        try {
+          wifiName = await networkInfo.getWifiName();
+          print("Wi-Fi name retrieved (non-mobile): $wifiName");
+        } catch (e) {
+          print("Failed to get Wi-Fi name (non-mobile): $e");
+          wifiName = 'Error retrieving Wi-Fi name';
+        }
       }
-    } else {
-      wifiName = await networkInfo.getWifiName();
-    }
-    wifiNameValue.value = wifiName ?? '';
-    // Reset to false before checking
-    isWifiMatched.value = false;
-    for (var wifi in attendanceBindingModel.value.attendanceBinding ?? []) {
-      if (wifi.wifiAddress == wifiNameValue.value.replaceAll('"', '')) {
-        isWifiMatched.value = true;
-        break; // Exit loop once we find a match
-      }else{
-        isWifiMatched.value = false;
-        break;
+
+      wifiNameValue.value = wifiName?.replaceAll('"', '') ?? 'No Wi-Fi';
+      print("Updated wifiNameValue: ${wifiNameValue.value}");
+
+      // Check Wi-Fi matching
+      isWifiMatched.value = false;
+      if (attendanceBindingModel.value.attendanceBinding == null || attendanceBindingModel.value.attendanceBinding!.isEmpty) {
+        print("Attendance binding is null or empty");
+      } else {
+        for (var wifi in attendanceBindingModel.value.attendanceBinding!) {
+          if (wifi.wifiAddress == wifiNameValue.value) {
+            print("Wi-Fi binding matched: ${wifi.wifiAddress}");
+            isWifiMatched.value = true;
+            break;
+          }
+        }
+        if (!isWifiMatched.value) {
+          print("No matching Wi-Fi found");
+        }
       }
+
+      print("Wi-Fi on office: ${wifiNameValue.value}");
+    } catch (e) {
+      print("Error getting Wi-Fi info: $e");
+      wifiNameValue.value = 'Error';
+      isWifiMatched.value = false;
     }
-  } catch (e) {
-    print("Error getting wifi info: $e");
+    update();
   }
-  update();
-}
+  Future<bool> isLocationServiceEnabled() async {
+    final location = Location();
+    bool serviceEnabled = await location.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+    }
+    return serviceEnabled;
+  }
   @override
   void onClose() {
-    timer?.cancel(); // Cancel timer when controller is closed
+    timer?.cancel();
     super.onClose();
   }
   void updateTime() {
@@ -217,6 +273,10 @@ checkWifi() async {
       if (response?.data?.attendanceBinding != null) {
         attendanceBindingModel.value =
             response?.data ?? AttendanceBindingModel();
+
+        for (var wifi in attendanceBindingModel.value.attendanceBinding!) {
+          print("wifi information not found ${wifi.wifiAddress}");
+        }
 
       } else {
         print("wifi information not found");

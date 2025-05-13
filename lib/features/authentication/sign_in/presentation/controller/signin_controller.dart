@@ -75,6 +75,8 @@ class SigninController extends GetxController {
               idNumber: idController.value.text,
               password: passwordController.value.text);
           RouteGenerator.pushNamedAndRemoveAll(context, Routes.homepage);
+          idController.value.clear();
+          passwordController.value.clear();
           if (!context.mounted) return;
           if ((box.read("email").toString().isEmpty) &&
               (box.read("password").toString().isEmpty)) {
@@ -97,6 +99,17 @@ class SigninController extends GetxController {
               msg: "No user found. Incorrect Password or Email");
           box.erase();
           // RouteGenerator.pushNamedAndRemoveAll(context, Routes.signinPage);
+        } else if(e.toString().contains("401")){
+          errorToast(
+              context: context,
+              msg:
+              "Password is wrong. Please enter correct password");
+
+        } else if(e.toString().contains("500")){
+          errorToast(
+              context: context,
+              msg:
+              "Please enter correct credentials");
         } else {
           box.erase();
           // RouteGenerator.pushNamedAndRemoveAll(context, Routes.registrationPage);

@@ -1,5 +1,5 @@
 class GetEmployeeFaceModel {
-  bool? success;
+  var success;
   List<EmployeeFaceAttendance>? employeeFaceAttendance;
 
   GetEmployeeFaceModel({this.success, this.employeeFaceAttendance});
@@ -26,13 +26,13 @@ class GetEmployeeFaceModel {
 }
 
 class EmployeeFaceAttendance {
-  int? id;
-  int? employeeId;
-  String? imageUrl;
-  String? thumbUrl;
-  int? uploaderInfo;
-  String? data;
-  String? dateFilter;
+  var id;
+  var employeeId;
+  var imageUrl;
+  var thumbUrl;
+  var uploaderInfo;
+  var data;
+  var dateFilter;
 
   EmployeeFaceAttendance(
       {this.id,

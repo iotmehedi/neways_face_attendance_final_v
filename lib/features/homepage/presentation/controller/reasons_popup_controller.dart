@@ -260,13 +260,11 @@ mixin ReasonsPopupController on GetxController {
                               ),
                               color: AppColorsList.red,
                             ),
-                            child: Expanded(
-                              child: CustomSimpleText(
-                                text: "X No, Thanks",
-                                fontSize: AppSizes.size11,
-                                color: AppColorsList.white,
-                                textAlignment: TextAlign.center,
-                              ),
+                            child: CustomSimpleText(
+                              text: "X No, Thanks",
+                              fontSize: AppSizes.size11,
+                              color: AppColorsList.white,
+                              textAlignment: TextAlign.center,
                             ),
                           ),
                         ),
