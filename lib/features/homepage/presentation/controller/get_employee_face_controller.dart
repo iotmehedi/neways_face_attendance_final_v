@@ -16,6 +16,7 @@ import 'package:location/location.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:neways_face_attendance_pro/core/core/extensions/extensions.dart';
 import 'package:neways_face_attendance_pro/core/utils/common_toast/custom_toast.dart';
+import 'package:neways_face_attendance_pro/features/authentication/sign_in/presentation/controller/signin_controller.dart';
 import 'package:neways_face_attendance_pro/features/homepage/data/model/attendance_binding_model.dart';
 import 'package:neways_face_attendance_pro/features/homepage/presentation/controller/reasons_popup_controller.dart';
 import 'package:neways_face_attendance_pro/main.dart';
@@ -46,9 +47,7 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
   final employeeFaceArrays = <int, List>{}.obs; // employeeId: faceArray
 
   // State management
-  final isEmployeeFaceLoading = false.obs;
   final isAttendanceBindingLoading = false.obs;
-  final isImageHave = false.obs;
   final isLoading = false.obs;
   final isMatching = true.obs;
   final matchResult = false.obs;
@@ -68,8 +67,11 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
   var capturingImage = false.obs;
   dynamic matchedEmployee;
   var currentTime = ''.obs;
+  var isConnectedWithAuthorizedWifi = false.obs;
   Timer? timer;
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+  var signInController = locator<SigninController>();
+  var isFirstBackPress = true.obs;
   @override
   void onInit() async {
     super.onInit();
@@ -78,34 +80,58 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
         checkWifi();
       } else {
         // Optionally reset values when not connected to Wi-Fi.
-        wifiNameValue.value = 'Not connected to Wi-Fi';
+        wifiNameValue.value = '';
         isWifiMatched.value = false;
+        isConnectedWithAuthorizedWifi.value = false;
         update(); // trigger UI update if using setState.
       }
     });
 
     checkWifi();
     updateTime();
-    attendanceBinding();
+    await attendanceBinding();
 
     // Update time every second
     timer = Timer.periodic(Duration(seconds: 1), (timer) => updateTime());
-    await getEmployeeFacetFunc();
   }
   @override
   void dispose() {
     _connectivitySubscription?.cancel();
     super.dispose();
   }
-  checkWifi() async {
+  Future<void> checkWifi() async {
     try {
       String? wifiName = '';
+
       if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
-        await isLocationServiceEnabled();
-        if (await Permission.locationWhenInUse.request().isGranted) {
+        // Check if location services are enabled
+        bool locationEnabled = await isLocationServiceEnabled();
+
+        if (!locationEnabled) {
+          // Request to enable location services
+          await isLocationServiceEnabled();
+          if (!locationEnabled) {
+            wifiName = 'Location services disabled';
+            print("Location services not enabled");
+            wifiNameValue.value = "";
+            isWifiMatched.value = false;
+            isConnectedWithAuthorizedWifi.value = false;
+            update();
+            return;
+          }
+        }else{
+          await attendanceBinding();
+        }
+        // Check and request location permission
+        var permissionStatus = await Permission.locationWhenInUse.status;
+        if (permissionStatus.isDenied) {
+          permissionStatus = await Permission.locationWhenInUse.request();
+        }
+        if (permissionStatus.isGranted || permissionStatus.isLimited) {
           print("Location permission granted");
           try {
             wifiName = await networkInfo.getWifiName();
+
             print("Wi-Fi name retrieved: $wifiName");
           } catch (e) {
             print("Failed to get Wi-Fi name: $e");
@@ -116,6 +142,7 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
           wifiName = 'Unauthorized to get Wi-Fi name';
         }
       } else {
+        // Non-mobile platform
         try {
           wifiName = await networkInfo.getWifiName();
           print("Wi-Fi name retrieved (non-mobile): $wifiName");
@@ -125,12 +152,13 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
         }
       }
 
-      wifiNameValue.value = wifiName?.replaceAll('"', '') ?? 'No Wi-Fi';
+      wifiNameValue.value = wifiName?.replaceAll('"', '') ?? '';
       print("Updated wifiNameValue: ${wifiNameValue.value}");
 
       // Check Wi-Fi matching
       isWifiMatched.value = false;
-      if (attendanceBindingModel.value.attendanceBinding == null || attendanceBindingModel.value.attendanceBinding!.isEmpty) {
+      if (attendanceBindingModel.value.attendanceBinding == null ||
+          attendanceBindingModel.value.attendanceBinding!.isEmpty) {
         print("Attendance binding is null or empty");
       } else {
         for (var wifi in attendanceBindingModel.value.attendanceBinding!) {
@@ -138,17 +166,20 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
             print("Wi-Fi binding matched: ${wifi.wifiAddress}");
             isWifiMatched.value = true;
             break;
+          } else {
+            print("Wi-Fi does not match: ${wifi.wifiAddress} != ${wifiNameValue.value}");
           }
         }
-        if (!isWifiMatched.value) {
-          print("No matching Wi-Fi found");
-        }
+      }
+
+      if (!isWifiMatched.value) {
+        print("No matching Wi-Fi found");
       }
 
       print("Wi-Fi on office: ${wifiNameValue.value}");
     } catch (e) {
       print("Error getting Wi-Fi info: $e");
-      wifiNameValue.value = 'Error';
+      wifiNameValue.value = '';
       isWifiMatched.value = false;
     }
     update();
@@ -236,35 +267,11 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
     }
   }
 
-  Future<void> getEmployeeFacetFunc() async {
-    isEmployeeFaceLoading.value = true;
-    errorMessage.value = null;
 
-    try {
-      final useCase =
-      GetEmployeeFacePassUseCase(locator<GetEmployeeFaceRepository>());
-      final response = await useCase();
-
-      if (response?.data?.employeeFaceAttendance != null) {
-        getEmployeeFaceModel.value = response!.data!;
-        isImageHave.value = true;
-        print(
-            "Employee image URL: ${getEmployeeFaceModel.value.employeeFaceAttendance?.first.imageUrl}");
-      } else {
-        print("image not found");
-        isImageHave.value = false;
-      }
-    } catch (e) {
-      errorMessage.value = 'Failed to load employees: ${e.toString()}';
-    } finally {
-      isEmployeeFaceLoading.value = false;
-    }
-    update();
-  }
 
   Future<void> attendanceBinding() async {
     isAttendanceBindingLoading.value = true;
-
+    print("wifi information found");
     try {
       final useCase =
       AttendanceBindingPassUseCase(locator<GetEmployeeFaceRepository>());
@@ -273,9 +280,11 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
       if (response?.data?.attendanceBinding != null) {
         attendanceBindingModel.value =
             response?.data ?? AttendanceBindingModel();
-
         for (var wifi in attendanceBindingModel.value.attendanceBinding!) {
-          print("wifi information not found ${wifi.wifiAddress}");
+          if(wifi.wifiAddress == wifiNameValue.value){
+            isConnectedWithAuthorizedWifi.value = true;
+          }
+          print("wifi information found ${wifi.wifiAddress}");
         }
 
       } else {
@@ -295,7 +304,7 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
     try {
       final useCase =
       SetAttendancePassUseCase(locator<GetEmployeeFaceRepository>());
-      final response = await useCase(attendanceValue: attendanceValue);
+      final response = await useCase();
       print("response ${response?['action']}");
       if (response != null) {
         if (response['action'] != null) {
@@ -326,8 +335,10 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
                 "${now.minute.toString().padLeft(2, '0')}";  // Minutes
 
             box.write("checkedIn", formattedDate);
+            box.write("lastCheckInTime", formattedDate);
             performCheckIn();
             successToast(context: context, msg: "Checked in successfully!");
+            RouteGenerator.pushNamedAndRemoveAll(navigatorKey.currentContext!, Routes.homepage);
           } else if (currentStatus == "Check Out" ||
               currentStatus == "Checked Out") {
             // Perform check-out
@@ -405,7 +416,7 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
       capturedImage.value = processedImage;
       // showPreview.value = true;
       // cameraController!.stopImageStream();
-      imageMatching(image: pickedImage.value, context: context);
+      // imageMatching(image: pickedImage.value, context: context);
       // return pickedImage.value;
     } catch (e) {
       debugPrint('Error capturing image: $e');
@@ -421,7 +432,6 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
       }
     }
   }
-
   Future<Uint8List> processCapturedImage(
       Uint8List originalBytes, {
         required bool isFrontCamera,
@@ -458,6 +468,121 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
     }
   }
 
+  // Future<Uint8List> processCapturedImage(
+  //     Uint8List originalBytes, {
+  //       required bool isFrontCamera,
+  //       int targetWidth = 400,
+  //       int targetHeight = 520,
+  //     }) async {
+  //   try {
+  //     // Decode the original image
+  //     final originalImage = img.decodeImage(originalBytes);
+  //     if (originalImage == null) return originalBytes;
+  //
+  //     img.Image processedImage = img.decodeImage(img.encodePng(originalImage))!;
+  //
+  //     // Flip if front camera (mirror effect)
+  //     if (isFrontCamera) {
+  //       processedImage = img.flipHorizontal(processedImage);
+  //     }
+  //
+  //     // Remove rotation metadata and auto-orient the image
+  //     processedImage = img.bakeOrientation(processedImage);
+  //
+  //     // Calculate aspect-preserving dimensions
+  //     final aspectRatio = originalImage.width / originalImage.height;
+  //     int finalWidth = targetWidth;
+  //     int finalHeight = targetHeight;
+  //
+  //     if (aspectRatio > 1) {
+  //       // Landscape orientation
+  //       finalHeight = (targetWidth / aspectRatio).round();
+  //     } else {
+  //       // Portrait orientation
+  //       finalWidth = (targetHeight * aspectRatio).round();
+  //     }
+  //
+  //     // Resize with better interpolation method
+  //     processedImage = img.copyResize(
+  //       processedImage,
+  //       width: finalWidth,
+  //       height: finalHeight,
+  //       interpolation: img.Interpolation.cubic, // Better quality than average
+  //     );
+  //
+  //     // Apply slight sharpening to reduce blur from resizing
+  //     processedImage = img.convolution(
+  //       processedImage,
+  //       filter: [-1, -1, -1, -1, 9, -1, -1, -1, -1],
+  //     );
+  //
+  //     processedImage = _applySharpening(processedImage);
+  //
+  //     // Adjust contrast slightly using available functions
+  //     processedImage = img.adjustColor(
+  //       processedImage,
+  //       contrast: 1.05,
+  //     );
+  //
+  //     // Convert to JPEG with optimized quality (85 is good balance)
+  //     return Uint8List.fromList(img.encodeJpg(
+  //       processedImage,
+  //       quality: 100,
+  //       chroma: img.JpegChroma.yuv420, // Better color preservation
+  //     ));
+  //   } catch (e) {
+  //     debugPrint('Error in processCapturedImage: $e');
+  //     // Fallback: Return original but resized if processing fails
+  //     try {
+  //       final fallbackImage = img.decodeImage(originalBytes);
+  //       if (fallbackImage != null) {
+  //         return Uint8List.fromList(img.encodeJpg(
+  //           img.copyResize(fallbackImage, width: targetWidth, height: targetHeight),
+  //           quality: 85,
+  //         ));
+  //       }
+  //     } catch (_) {}
+  //     return originalBytes;
+  //   }
+  // }
+  img.Image _applySharpening(img.Image image) {
+    // Create a copy to work on
+    final sharpened = img.copyResize(image, width: image.width, height: image.height);
+
+    // Simple sharpening kernel
+    const kernel = [
+      [ 0, -1,  0],
+      [-1,  5, -1],
+      [ 0, -1,  0]
+    ];
+
+    // Apply convolution for sharpening effect
+    for (var y = 1; y < image.height - 1; y++) {
+      for (var x = 1; x < image.width - 1; x++) {
+        var r = 0.0, g = 0.0, b = 0.0;
+
+        for (var ky = -1; ky <= 1; ky++) {
+          for (var kx = -1; kx <= 1; kx++) {
+            final pixel = image.getPixel(x + kx, y + ky);
+            final weight = kernel[ky + 1][kx + 1].toDouble();
+
+            // Correct way to access color channels in the image package
+            r += pixel.r * weight;
+            g += pixel.g * weight;
+            b += pixel.b * weight;
+          }
+        }
+
+        r = r.clamp(0, 255);
+        g = g.clamp(0, 255);
+        b = b.clamp(0, 255);
+
+        sharpened.setPixelRgb(x, y, r, g, b);
+      }
+    }
+
+    return sharpened;
+  }
   Future<void> resetCameraState() async {
     showPreview.value = false;
     capturedImage.value = null;
@@ -469,7 +594,7 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
     try {
       const String apiUrl =
           "https://documents.neways3.com/face_attendance/recognize_face";
-      final String employeeId = box.read("id").toString();
+      final String employeeId = box.read("employeeId").toString();
 
       var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
       request.fields['employee_id'] = employeeId;
@@ -488,6 +613,7 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
       print("Sending request for employee: $employeeId");
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
+      print("The image matched or not ${response.body}");
       final responseData = json.decode(response.body);
 
       if (response.statusCode == 200) {
@@ -500,7 +626,7 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
         showPreview.value = true;
         errorToast(
           context: context,
-          msg: responseData['message'] ??
+          msg: responseData['error'] ??
               "Your face is not registered. Please add it first.",
         );
       } else {
@@ -647,6 +773,7 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
 
     final isCheckedIn = box.read("isCheckedIn") as bool? ?? false;
     final isCheckedOut = box.read("isCheckedOut") as bool? ?? false;
+    final lastCheckInTimeStr = box.read("lastCheckInTime") as String?;
 
     if (isCheckedIn && isCheckedOut) {
       return "Checked Out";
@@ -674,6 +801,18 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
     final startMinutes = toMinutes(start);
     final endMinutes = toMinutes(end);
 
+    // Check if user is late (checked in after start time)
+    bool isLate = false;
+    if (lastCheckInTimeStr != null && isCheckedIn) {
+      try {
+        final lastCheckInTime = parseTime(lastCheckInTimeStr);
+        final checkInMinutes = toMinutes(lastCheckInTime);
+        isLate = checkInMinutes > startMinutes;
+      } catch (e) {
+        print('Error parsing check-in time: $e');
+      }
+    }
+
     // Handle night shift (spanning midnight)
     if (endMinutes < startMinutes) {
       if (nowMinutes >= startMinutes) {
@@ -682,7 +821,7 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
           if (nowMinutes >= (endMinutes - 20) && currentTime.hour < 24) {
             return "Check Out";
           }
-          return "On Duty";
+          return isLate ? "Late" : "On Duty";
         }
         return "Check In";
       } else if (nowMinutes < endMinutes) {
@@ -715,12 +854,93 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
           if (nowMinutes >= (endMinutes - 20)) {
             return "Check Out";
           }
-          return "On Duty";
+          return isLate ? "Late" : "On Duty";
         }
         return "Check In";
       }
     }
   }
+  // String getShiftStatus() {
+  //   final now = DateTime.now();
+  //   final currentTime = TimeOfDay.fromDateTime(now);
+  //   final today = now.toString().split(' ')[0];
+  //
+  //   final isCheckedIn = box.read("isCheckedIn") as bool? ?? false;
+  //   final isCheckedOut = box.read("isCheckedOut") as bool? ?? false;
+  //
+  //   if (isCheckedIn && isCheckedOut) {
+  //     return "Checked Out";
+  //   }
+  //
+  //   // Get shift times
+  //   final startTimeStr = box.read("dutyStartTime") ?? "09:00";
+  //   final endTimeStr = box.read("dutyEndTime") ?? "17:00";
+  //
+  //   TimeOfDay parseTime(String timeStr) {
+  //     try {
+  //       final parts = timeStr.split(':');
+  //       return TimeOfDay(
+  //           hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  //     } catch (e) {
+  //       return TimeOfDay(hour: 9, minute: 0);
+  //     }
+  //   }
+  //
+  //   final start = parseTime(startTimeStr);
+  //   final end = parseTime(endTimeStr);
+  //
+  //   int toMinutes(TimeOfDay time) => time.hour * 60 + time.minute;
+  //   final nowMinutes = toMinutes(currentTime);
+  //   final startMinutes = toMinutes(start);
+  //   final endMinutes = toMinutes(end);
+  //
+  //   // Handle night shift (spanning midnight)
+  //   if (endMinutes < startMinutes) {
+  //     if (nowMinutes >= startMinutes) {
+  //       // After shift start, before midnight
+  //       if (isCheckedIn) {
+  //         if (nowMinutes >= (endMinutes - 20) && currentTime.hour < 24) {
+  //           return "Check Out";
+  //         }
+  //         return "On Duty";
+  //       }
+  //       return "Check In";
+  //     } else if (nowMinutes < endMinutes) {
+  //       // After midnight, before shift end
+  //       if (isCheckedIn) {
+  //         return "Check Out"; // Keep showing Check Out until shift end time
+  //       }
+  //       return "Check In";
+  //     } else {
+  //       // After shift end, before shift start (next day)
+  //       return "Check In";
+  //     }
+  //   }
+  //   // Handle day shift
+  //   else {
+  //     if (nowMinutes < startMinutes) {
+  //       return "Check In";
+  //     } else if (nowMinutes > endMinutes) {
+  //       // After duty end time, check if it's before or after midnight
+  //       if (currentTime.hour < 24) { // Before 12:00 AM (midnight)
+  //         if (isCheckedIn && !isCheckedOut || isCheckedIn && isCheckedOut) {
+  //           return "Check Out"; // Still in check-out period until midnight
+  //         }
+  //         return "Check out"; // Default if not checked in
+  //       } else { // After 12:00 AM (midnight)
+  //         return "Check In"; // New day, reset to "Check In"
+  //       }
+  //     } else {
+  //       if (isCheckedIn) {
+  //         if (nowMinutes >= (endMinutes - 20)) {
+  //           return "Check Out";
+  //         }
+  //         return "On Duty";
+  //       }
+  //       return "Check In";
+  //     }
+  //   }
+  // }
 
   String getShiftStatusTitle() {
     final now = DateTime.now();
@@ -819,11 +1039,12 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
     }
   }
   void disposes() {
-    cameraController?.dispose();
-    capturedImage.value = null;
+    // cameraController?.dispose();
+    // capturedImage.value = null;
     showPreview.value = false;
+    capturingImage.value = true;
     pickedImage.value = File('');
-    isCameraInitialized.value = false;
+    showPreview.value = false;
     isMatching.value = false;
   }
 
@@ -868,6 +1089,7 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
                         RouteGenerator.pushNamedAndRemoveAll(
                             navigatorKey.currentContext!, Routes.signinPage);
                         box.erase();
+                        Get.delete();
                       },
                       child: Container(
                         width: MediaQuery.of(context).size.width,

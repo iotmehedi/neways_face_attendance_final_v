@@ -18,8 +18,8 @@ class GetEmployeeFacePassUseCase extends GetEmployeeFaceUseCase {
 class SetAttendancePassUseCase extends GetEmployeeFaceUseCase {
   SetAttendancePassUseCase(super.getEmployeeFaceRepository);
 
-  Future<Map<String, dynamic>?> call({required String attendanceValue}) async {
-    var response = await getEmployeeFaceRepository.attendanceValue(attendanceValue: attendanceValue);
+  Future<Map<String, dynamic>?> call() async {
+    var response = await getEmployeeFaceRepository.attendanceValue();
     return response;
   }
 }

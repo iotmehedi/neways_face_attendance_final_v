@@ -58,26 +58,19 @@ class ProfilePageScreen extends StatelessWidget {
                                 weight: AppSizes.newSize(14),
                                 boxfit: BoxFit.cover,
                                 imageUrl:
-                                    "${NetworkConfiguration.imageUrl}${controller.profileModel.value.user?.avaterPhoto}",
+                                    "${NetworkConfiguration.imageUrl}${box.read("photo")}",
                               ),
                             ),
                           ),
                           20.ph,
-                          controller.profileModel.value.user?.fullName
-                                      ?.isEmpty ??
-                                  false
+                          box.read("name") == null
                               ? SizedBox.shrink()
                               : CustomSimpleText(
-                                  text: controller
-                                          .profileModel.value.user?.fullName ??
-                                      ''),
-                          controller.profileModel.value.user?.email?.isEmpty ??
-                                  false
+                                  text: box.read("name")),
+                          box.read("email") == null
                               ? SizedBox.shrink()
                               : CustomSimpleText(
-                                  text: controller
-                                          .profileModel.value.user?.email ??
-                                      ''),
+                                  text: box.read("email")),
                           5.ph,
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -100,75 +93,47 @@ class ProfilePageScreen extends StatelessWidget {
                             ],
                           ),
                           40.ph,
-                          controller.profileModel.value.user?.weekenDayName
-                                      ?.isEmpty ??
-                                  false
+                          box.read("weekendDay") == null
                               ? SizedBox.shrink()
                               : CustomRow(
                                   title: "Weekend Day:",
-                                  value: controller.profileModel.value.user
-                                          ?.weekenDayName ??
-                                      ''),
+                                  value: box.read("weekendDay")),
                           5.ph,
-                          controller.profileModel.value.user?.designationName
-                                      ?.isEmpty ??
-                                  false
+                          box.read("designation") == null
                               ? SizedBox.shrink()
                               : CustomRow(
                                   title: "Designation:",
-                                  value: controller.profileModel.value.user
-                                          ?.designationName ??
-                                      ''),
+                                  value: box.read("designation")),
                           5.ph,
-                          controller.profileModel.value.user?.branchName
-                                      ?.isEmpty ??
-                                  false
+                          box.read("branchName") == null
                               ? SizedBox.shrink()
                               : CustomRow(
                                   title: "Branch Name:",
-                                  value: controller.profileModel.value.user
-                                          ?.branchName ??
-                                      ''),
+                                  value: box.read("branchName")),
                           5.ph,
-                          controller.profileModel.value.user?.personalPhone
-                                      ?.isEmpty ??
-                                  false
+                          box.read("personalNumber") == null
                               ? SizedBox.shrink()
                               : CustomRow(
                                   title: "Personal Number:",
-                                  value: controller.profileModel.value.user
-                                          ?.personalPhone ??
-                                      ''),
+                                  value: box.read("personalNumber")),
                           5.ph,
-                          controller.profileModel.value.user?.currentAddress
-                                      ?.isEmpty ??
-                                  false
+                          box.read("currentAddress") == null
                               ? SizedBox.shrink()
                               : CustomRow(
                                   title: "Currect Address:",
-                                  value: controller.profileModel.value.user
-                                          ?.currentAddress ??
-                                      ''),
+                                  value: box.read("currentAddress")),
                           5.ph,
-                          controller.profileModel.value.user?.departmentName
-                                      ?.isEmpty ??
-                                  false
+                          box.read("departmentName") == null
                               ? SizedBox.shrink()
                               : CustomRow(
                                   title: "Department Name:",
-                                  value: controller.profileModel.value.user
-                                          ?.departmentName ??
-                                      ''),
+                                  value: box.read("departmentName")),
                           5.ph,
-                          controller.profileModel.value.user?.permanentAddress
-                                      ?.isEmpty ??
-                                  false
+                          box.read("permanentAddress") == null
                               ? SizedBox.shrink()
                               : CustomRow(
                                   title: "Permanent Address:",
-                                  value: controller.profileModel.value.user
-                                          ?.permanentAddress ??
-                                      ''),
+                                  value: box.read("permanentAddress")),
                           5.ph,
                         ],
                       ),

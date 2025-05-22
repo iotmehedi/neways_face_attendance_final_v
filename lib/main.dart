@@ -46,67 +46,66 @@ void main() async {
     }
   });
 
-  await initializeService();
+  // await initializeService();
 }
 
-Future<void> initializeService() async {
-  if (box.read("token") != null) {
-    final service = FlutterBackgroundService();
-    await service.configure(
-      androidConfiguration: AndroidConfiguration(
-        onStart: onStart,
-        autoStart: true,
-        isForegroundMode: false,
-      ),
-      iosConfiguration: IosConfiguration(
-        autoStart: true,
-        onForeground: onStart,
-      ),
-    );
-
-    await Workmanager().initialize(
-      callbackDispatcher,
-      isInDebugMode: true,
-    );
-
-    await Workmanager().registerPeriodicTask(
-      "notificationTask",
-      "fetchNotifications",
-      frequency: const Duration(minutes: 15),
-    );
-  }
-}
-
-@pragma('vm:entry-point')
-void onStart(ServiceInstance service) async {
-  // Initialize dependencies in the background isolate
-  await GetStorage.init();
-await init();
-  final controller = locator<GetEmployeeFaceController>();
-
-  Timer.periodic(const Duration(seconds: 3), (timer) async {
-    try {
-      if (box.read("token") != null) {
-        await controller.checkWifi();
-        // await controller.attendanceBinding();
-
-      }
-    } catch (e) {
-      print('Background service error: $e');
-    }
-  });
-}
-
-@pragma('vm:entry-point')
-void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    await GetStorage.init();
-    await init();
-    final controller = locator<GetEmployeeFaceController>();
-    await controller.attendanceBinding();
-    return Future.value(true);
-  });
-}
+// Future<void> initializeService() async {
+//   if (box.read("token") != null) {
+//     final service = FlutterBackgroundService();
+//     await service.configure(
+//       androidConfiguration: AndroidConfiguration(
+//         onStart: onStart,
+//         autoStart: true,
+//         isForegroundMode: false,
+//       ),
+//       iosConfiguration: IosConfiguration(
+//         autoStart: true,
+//         onForeground: onStart,
+//       ),
+//     );
+//
+//     await Workmanager().initialize(
+//       callbackDispatcher,
+//       isInDebugMode: true,
+//     );
+//
+//     await Workmanager().registerPeriodicTask(
+//       "notificationTask",
+//       "fetchNotifications",
+//       frequency: const Duration(minutes: 15),
+//     );
+//   }
+// }
+//
+// @pragma('vm:entry-point')
+// void onStart(ServiceInstance service) async {
+//   // Initialize dependencies in the background isolate
+//   await GetStorage.init();
+// await init();
+//   final controller = locator<GetEmployeeFaceController>();
+//
+//   Timer.periodic(const Duration(seconds: 3), (timer) async {
+//     try {
+//       if (box.read("token") != null) {
+//         // await controller.checkWifi();
+//         // await controller.attendanceBinding();
+//       }
+//     } catch (e) {
+//       print('Background service error: $e');
+//     }
+//   });
+// }
+//
+// @pragma('vm:entry-point')
+// void callbackDispatcher() {
+//   Workmanager().executeTask((task, inputData) async {
+//     await GetStorage.init();
+//     await init();
+//     final controller = locator<GetEmployeeFaceController>();
+//     await controller.attendanceBinding();
+//     return Future.value(true);
+//   });
+// }
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});

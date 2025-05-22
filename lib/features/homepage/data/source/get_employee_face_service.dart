@@ -1,11 +1,14 @@
+import 'dart:convert';
+
 import 'package:neways_face_attendance_pro/features/homepage/data/model/get_employee_face_model.dart';
 import '../../../../../../core/source/dio_client.dart';
 import '../../../../../../core/source/model/api_response.dart';
 import '../../../../core/app_component/app_component.dart';
 import '../../../../core/network/configuration.dart';
 import '../../../../core/status/status.dart';
+import '../../../../main.dart';
 import '../model/attendance_binding_model.dart';
-
+import 'package:dio/dio.dart' as dio;
 class GetEmployeeFaceService {
   final DioClient _dioClient = locator<DioClient>();
   Future<Response<GetEmployeeFaceModel>?> recommended() async {
@@ -24,11 +27,12 @@ class GetEmployeeFaceService {
 
     return apiResponse;
   }
-  Future<Map<String, dynamic>?> setAttendance({required String attendanceValue}) async {
+  Future<Map<String, dynamic>?> setAttendance() async {
     Map<String, dynamic>? apiResponse;
-    var formData = {
-      "faceMatch": attendanceValue,
-    };
+    dio.FormData formData = dio.FormData.fromMap({
+      "api_secret": "kAXan6SFy5U3UrzHMMQgCzFEHwU9jzuBF6kbsFMjRsCSY8fFVhwhRTZvBqrMbcK3",
+      "employee_db_id": box.read("id"),
+    });
     print("login credentials $formData");
 
     await _dioClient.post(
@@ -36,9 +40,7 @@ class GetEmployeeFaceService {
       request: formData,
       responseCallback: (response, message) {
         print("API response login data 1 ${response}"); // Print the full response to check
-
-        apiResponse = response;
-
+        apiResponse = jsonDecode(response);
       },
       failureCallback: (message, status) {
         print("This is error message $message");
@@ -51,7 +53,12 @@ class GetEmployeeFaceService {
   }
   Future<Response<AttendanceBindingModel>?> attendanceBinding() async {
     Response<AttendanceBindingModel>? apiResponse;
-    await _dioClient.get(
+    dio.FormData formData = dio.FormData.fromMap({
+      "api_secret": "kAXan6SFy5U3UrzHMMQgCzFEHwU9jzuBF6kbsFMjRsCSY8fFVhwhRTZvBqrMbcK3",
+      "employee_db_id": box.read("id"),
+    });
+    await _dioClient.post(
+      request: formData,
       path: NetworkConfiguration.attendanceBinding,
       responseCallback: (response, message) {
         var products = AttendanceBindingModel.fromJson(response);

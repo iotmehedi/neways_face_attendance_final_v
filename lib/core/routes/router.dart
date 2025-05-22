@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:neways_face_attendance_pro/features/homepage/presentation/ui/face_auth_screen.dart';
+import '../../features/authentication/sign_in/presentation/view/otp_screen.dart';
 import '../../features/authentication/sign_in/presentation/view/sign_in_page.dart';
 
 import '../../features/profile/presentation/ui/profile_page.dart';
@@ -102,6 +103,10 @@ class RouteGenerator {
       case Routes.homepage:
         return MaterialPageRoute(
           builder: (context) => FaceAuthScreen(),
+        );
+      case Routes.otpScreen:
+        return MaterialPageRoute(
+          builder: (context) => OTPScreen(),
         );
       default:
         return MaterialPageRoute(

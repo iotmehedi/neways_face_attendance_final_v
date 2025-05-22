@@ -14,6 +14,8 @@ import 'package:neways_face_attendance_pro/features/widgets/custom_elevatedButto
 import 'package:neways_face_attendance_pro/features/widgets/custom_elevatedButton/custom_text.dart';
 import 'package:neways_face_attendance_pro/main.dart';
 
+import '../../../../core/routes/route_name.dart';
+import '../../../../core/routes/router.dart';
 import '../../../widgets/custom_textfield/custom_textfield.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
@@ -34,15 +36,15 @@ mixin ReasonsPopupController on GetxController {
       isReasonPosting.value = true;
       if (reasonController.value.text.isNotEmpty) {
         const String apiUrl =
-            "https://app.neways3.com/api/attendance/save-attendance-request";
-        final String? token = box.read("token");
+            "https://erp.neways3.com/api/employee/attendance/attendance-request";
         var request = http.MultipartRequest('POST', Uri.parse(apiUrl));
         request.headers.addAll({
-          'Authorization': 'Bearer $token', // Most common format
           'Accept': 'application/json', // Optional
         });
         // Add text fields
         request.fields.addAll({
+          'api_secret': 'kAXan6SFy5U3UrzHMMQgCzFEHwU9jzuBF6kbsFMjRsCSY8fFVhwhRTZvBqrMbcK3',
+          'employee_db_id': box.read('id'),
           'action': action,
           'request_title': requestTitle,
           'attendance_reason_note': reasonController.value.text,
@@ -75,7 +77,7 @@ mixin ReasonsPopupController on GetxController {
 
             request.files.add(
               await http.MultipartFile.fromPath(
-                'attachment[]', // API expects an array
+                'attachment', // API expects an array
                 image?.path ?? '',
                 filename:
                     "attachment_${DateTime.now().millisecondsSinceEpoch}.$fileExtension",
@@ -95,6 +97,7 @@ mixin ReasonsPopupController on GetxController {
           isReasonPosting.value = false;
           reasonController.value.text = '';
           images.clear();
+          RouteGenerator.pushNamedAndRemoveAll(navigatorKey.currentContext!, Routes.homepage);
         } else {
           isReasonPosting.value = false;
           errorToast(context: context, msg: "Failed to upload files");
@@ -383,7 +386,7 @@ mixin ReasonsPopupController on GetxController {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf', 'mp4', 'mov', 'gif'],
         allowMultiple: false, // Single file per container
       );
 

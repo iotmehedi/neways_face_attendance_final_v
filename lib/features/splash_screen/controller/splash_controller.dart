@@ -18,7 +18,7 @@ class SplashScreenController extends GetxController {
     Future.delayed(const Duration(seconds: 3), () async {
       print("the value2222 ${box.read("idNumber")} ${box.read("password")}");
       if ((box.read("idNumber")?.toString().isNotEmpty ?? false) &&
-          (box.read("password")?.toString().isNotEmpty ?? false)) {
+          (box.read("password")?.toString().isNotEmpty ?? false) && (box.read("otp")?.toString().isNotEmpty ?? false)) {
         signInController.submitLoginData(navigatorKey.currentContext!,
             from: "splash");
       } else {

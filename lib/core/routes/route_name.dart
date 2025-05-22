@@ -5,5 +5,5 @@ class Routes {
   static const signinPage = "/signInPage";
   static const registrationPage = "/registrationPage";
   static const profile = "/profile";
-
+  static const otpScreen = "/otpScreen";
 }

@@ -1,16 +1,28 @@
 class LoginModel {
   User? user;
   Attendance? attendance;
+  List<AttendanceStatus>? attendanceStatus;
   var accessToken;
   var tokenType;
 
-  LoginModel({this.user, this.attendance, this.accessToken, this.tokenType});
+  LoginModel(
+      {this.user,
+        this.attendance,
+        this.attendanceStatus,
+        this.accessToken,
+        this.tokenType});
 
   LoginModel.fromJson(Map<String, dynamic> json) {
     user = json['user'] != null ? new User.fromJson(json['user']) : null;
     attendance = json['attendance'] != null
         ? new Attendance.fromJson(json['attendance'])
         : null;
+    if (json['attendance_status'] != null) {
+      attendanceStatus = <AttendanceStatus>[];
+      json['attendance_status'].forEach((v) {
+        attendanceStatus!.add(new AttendanceStatus.fromJson(v));
+      });
+    }
     accessToken = json['access_token'];
     tokenType = json['token_type'];
   }
@@ -22,6 +34,10 @@ class LoginModel {
     }
     if (this.attendance != null) {
       data['attendance'] = this.attendance!.toJson();
+    }
+    if (this.attendanceStatus != null) {
+      data['attendance_status'] =
+          this.attendanceStatus!.map((v) => v.toJson()).toList();
     }
     data['access_token'] = this.accessToken;
     data['token_type'] = this.tokenType;
@@ -77,10 +93,13 @@ class User {
   var roasterCode;
   var weekenDayId;
   var weekenDayName;
+  var isAttendanceWhiteList;
   var status;
   var uploaderInfo;
   var data;
   var dateFilter;
+  var createdAt;
+  var updatedAt;
   var rosterName;
   var rosterCode;
   var dutyHour;
@@ -93,7 +112,6 @@ class User {
   var endMin;
   var endAmpm;
   var includeMealBreak;
-  var isAttendanceWhiteList;
 
   User(
       {this.id,
@@ -143,10 +161,13 @@ class User {
         this.roasterCode,
         this.weekenDayId,
         this.weekenDayName,
+        this.isAttendanceWhiteList,
         this.status,
         this.uploaderInfo,
         this.data,
         this.dateFilter,
+        this.createdAt,
+        this.updatedAt,
         this.rosterName,
         this.rosterCode,
         this.dutyHour,
@@ -158,9 +179,7 @@ class User {
         this.endHour,
         this.endMin,
         this.endAmpm,
-        this.includeMealBreak,
-      this.isAttendanceWhiteList,
-      });
+        this.includeMealBreak});
 
   User.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -210,10 +229,13 @@ class User {
     roasterCode = json['roaster_code'];
     weekenDayId = json['weeken_day_id'];
     weekenDayName = json['weeken_day_name'];
+    isAttendanceWhiteList = json['is_attendance_white_list'];
     status = json['status'];
     uploaderInfo = json['uploader_info'];
     data = json['data'];
     dateFilter = json['date_filter'];
+    createdAt = json['created_at'];
+    updatedAt = json['updated_at'];
     rosterName = json['roster_name'];
     rosterCode = json['roster_code'];
     dutyHour = json['duty_hour'];
@@ -226,7 +248,6 @@ class User {
     endMin = json['end_min'];
     endAmpm = json['end_ampm'];
     includeMealBreak = json['include_meal_break'];
-    isAttendanceWhiteList = json['is_attendance_white_list'];
   }
 
   Map<String, dynamic> toJson() {
@@ -278,10 +299,13 @@ class User {
     data['roaster_code'] = this.roasterCode;
     data['weeken_day_id'] = this.weekenDayId;
     data['weeken_day_name'] = this.weekenDayName;
+    data['is_attendance_white_list'] = this.isAttendanceWhiteList;
     data['status'] = this.status;
     data['uploader_info'] = this.uploaderInfo;
     data['data'] = this.data;
     data['date_filter'] = this.dateFilter;
+    data['created_at'] = this.createdAt;
+    data['updated_at'] = this.updatedAt;
     data['roster_name'] = this.rosterName;
     data['roster_code'] = this.rosterCode;
     data['duty_hour'] = this.dutyHour;
@@ -294,7 +318,6 @@ class User {
     data['end_min'] = this.endMin;
     data['end_ampm'] = this.endAmpm;
     data['include_meal_break'] = this.includeMealBreak;
-    data['is_attendance_white_list'] = this.isAttendanceWhiteList;
     return data;
   }
 }
@@ -324,6 +347,8 @@ class Attendance {
   var uploaderInfo;
   var data;
   var dateFilter;
+  var createdAt;
+  var updatedAt;
 
   Attendance(
       {this.id,
@@ -349,7 +374,9 @@ class Attendance {
         this.status,
         this.uploaderInfo,
         this.data,
-        this.dateFilter});
+        this.dateFilter,
+        this.createdAt,
+        this.updatedAt});
 
   Attendance.fromJson(Map<String, dynamic> json) {
     id = json['id'];
@@ -376,6 +403,8 @@ class Attendance {
     uploaderInfo = json['uploader_info'];
     data = json['data'];
     dateFilter = json['date_filter'];
+    createdAt = json['created_at'];
+    updatedAt = json['updated_at'];
   }
 
   Map<String, dynamic> toJson() {
@@ -404,6 +433,73 @@ class Attendance {
     data['uploader_info'] = this.uploaderInfo;
     data['data'] = this.data;
     data['date_filter'] = this.dateFilter;
+    data['created_at'] = this.createdAt;
+    data['updated_at'] = this.updatedAt;
+    return data;
+  }
+}
+
+class AttendanceStatus {
+  var id;
+  var employeeId;
+  var attendanceId;
+  var rosterId;
+  var attendanceDate;
+  var type;
+  var intiming;
+  var tima;
+  var uploaderInfo;
+  var data;
+  var dateFilter;
+  var createdAt;
+  var updatedAt;
+
+  AttendanceStatus(
+      {this.id,
+        this.employeeId,
+        this.attendanceId,
+        this.rosterId,
+        this.attendanceDate,
+        this.type,
+        this.intiming,
+        this.tima,
+        this.uploaderInfo,
+        this.data,
+        this.dateFilter,
+        this.createdAt,
+        this.updatedAt});
+
+  AttendanceStatus.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    employeeId = json['employee_id'];
+    attendanceId = json['attendance_id'];
+    rosterId = json['roster_id'];
+    attendanceDate = json['attendance_date'];
+    type = json['type'];
+    intiming = json['intiming'];
+    tima = json['tima'];
+    uploaderInfo = json['uploader_info'];
+    data = json['data'];
+    dateFilter = json['date_filter'];
+    createdAt = json['created_at'];
+    updatedAt = json['updated_at'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['id'] = this.id;
+    data['employee_id'] = this.employeeId;
+    data['attendance_id'] = this.attendanceId;
+    data['roster_id'] = this.rosterId;
+    data['attendance_date'] = this.attendanceDate;
+    data['type'] = this.type;
+    data['intiming'] = this.intiming;
+    data['tima'] = this.tima;
+    data['uploader_info'] = this.uploaderInfo;
+    data['data'] = this.data;
+    data['date_filter'] = this.dateFilter;
+    data['created_at'] = this.createdAt;
+    data['updated_at'] = this.updatedAt;
     return data;
   }
 }

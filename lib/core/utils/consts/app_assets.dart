@@ -5,4 +5,5 @@ class AppAssets {
   static const String noFoundImage = 'assets/svg/empty.svg';
   static const String logout = 'assets/logout.png';
   static const String warning = 'assets/warning.png';
+  static const String passwordImage = 'assets/password.png';
 }

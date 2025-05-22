@@ -13,5 +13,5 @@ abstract class GetEmployeeFaceRepository {
 
   Future<Response<GetEmployeeFaceModel>?> recommended();
   Future<Response<AttendanceBindingModel>?> attendanceBinding();
-  Future<Map<String, dynamic>?> attendanceValue({required String attendanceValue});
+  Future<Map<String, dynamic>?> attendanceValue();
 }

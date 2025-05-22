@@ -28,34 +28,25 @@ class DioClient {
     // try {
     if (connectivityResult.contains(ConnectivityResult.mobile) ||
         connectivityResult.contains(ConnectivityResult.wifi)) {
-      print(
-          "the phone check path ${(NetworkConfiguration.baseUrl) + path} ${request}");
       response = await dio.post(
         (NetworkConfiguration.baseUrl) + path,
         data: request,
         // queryParameters: request,
         options: Options(
           method: "POST",
-          headers: {
-            'Authorization': 'Bearer ${box.read("token")}',
-            // 'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
           receiveTimeout: const Duration(milliseconds: 30000),
         ),
       );
-      logger.i("dio response111 ${response.data}");
+      print("response body ${response}");
       // var csrftoken = response.headers.remove('set-cookie').substring(10, 74);
       if (response.data != null) {
         logger.i("dio response $response");
-        logger.i("dio response111 ${response.data}");
-
         responseCallback(response.data, response.statusMessage);
       } else {
         failureCallback(response.statusMessage, response.statusCode);
       }
     } else {
-      // CommonMethods.showToast(Constants.MESSAGE_NO_INTERNET, Colors.white);
+      // CommonMethods.showToast(Constants.MESSAGE_NO_INTERNET, ThemeConfig.white);
     }
     // } catch (e) {
     //   // logger.d(e.toString());
@@ -63,6 +54,7 @@ class DioClient {
     // }
     return response;
   }
+
 
   Future<Response?> petch({
     required String path,
