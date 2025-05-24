@@ -364,19 +364,17 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
                                                               msg:
                                                                   "Please connect with authenticate wifi");
                                                         } else {
-                                                        _employeeController
-                                                            .resetCameraState();
-                                                        WidgetsBinding.instance
-                                                            .addPostFrameCallback(
-                                                                (_) {
-                                                              _employeeController
-                                                                  .initializeCamera(
-                                                                  context);
-                                                            });
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(builder: (context) =>  CameraPage()),
-                                                        );
+                                                        if(await _employeeController.isCameraPermissionHave() == true){
+                                                          _employeeController
+                                                              .resetCameraState();
+                                                          Navigator.push(
+                                                            context,
+                                                            MaterialPageRoute(builder: (context) =>  CameraPage()),
+                                                          );
+                                                        }else{
+                                                          _employeeController.showPermissionDeniedDialog();
+                                                        }
+
                                                         }
 
                                                       },
@@ -514,14 +512,23 @@ class _FaceAuthScreenState extends State<FaceAuthScreen> {
                                                                     box.read(
                                                                         "isLate") !=
                                                                         null
-                                                                    ? box
+                                                                    ? "(${box
                                                                     .read(
                                                                     "isLate")
-                                                                    .toString()
+                                                                    .toString()} present)"
                                                                     : ''}",
                                                                 style: TextStyle(
                                                                     fontSize: AppSizes.size13,
-                                                                    color: Colors
+                                                                    color: box
+                                                                        .read(
+                                                                        "isLate")
+                                                                        .toString()
+                                                                        .toLowerCase()
+                                                                        .contains(
+                                                                        "late") &&
+                                                                        box.read(
+                                                                            "isLate") !=
+                                                                            null ? Colors.orangeAccent : Colors
                                                                         .black,
                                                                     fontWeight:
                                                                     FontWeight

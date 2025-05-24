@@ -238,7 +238,8 @@ class SigninController extends GetxController {
          if((getAttendanceModel.value.attendanceStatus?.isNotEmpty ?? false) || (getAttendanceModel.value.attendanceStatus != null)){
            // box.write("isLate", loginModelData?.attendanceStatus.)
            for(var i in getAttendanceModel.value.attendanceStatus!){
-             box.write("isLate", i.intiming);
+             if(i.intiming?.toLowerCase() == "late"){}
+             box.write("isLate", "Late");
            }
          }
         if(getAttendanceModel.value.attendance == null){

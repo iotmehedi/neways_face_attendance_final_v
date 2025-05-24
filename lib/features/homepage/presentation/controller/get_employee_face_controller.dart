@@ -203,10 +203,29 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
   }
 
   String _twoDigits(int n) => n.toString().padLeft(2, '0');
+  Future<bool> isCameraPermissionHave() async{
+    final status = await Permission.camera.request();
+    if(!status.isGranted){
+      await Permission.camera.request();
+      return false;
+    }else{
+      return true;
+    }
+  }
   Future<void> initializeCamera(BuildContext context) async {
     // await _disposeCamera();
     capturingImage.value = false;
     try {
+      final status = await Permission.camera.request();
+
+      if (!status.isGranted) {
+        // Request to enable location services
+        await Permission.camera.request();
+        if (!status.isGranted) {
+          update();
+          return;
+        }
+      }
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
         throw Exception('No cameras available');
@@ -230,12 +249,35 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
     } catch (e) {
       debugPrint('Error initializing camera: $e');
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Camera error: $e')),
-      );
+      // ScaffoldMessenger.of(context).showSnackBar(
+      //   SnackBar(content: Text('Camera error: $e')),
+      // );
     }
   }
-
+  void showPermissionDeniedDialog() {
+    // Show a dialog explaining why you need the permission
+    // and provide a button to open app settings
+    showDialog(
+      context: navigatorKey.currentContext!,
+      builder: (context) => AlertDialog(
+        title: Text('Permission Required'),
+        content: Text('Please give camera permission'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              openAppSettings();
+            },
+            child: Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
+  }
   Future<void> retakePicture(BuildContext context) async {
     try {
       await _disposeCamera();
@@ -415,8 +457,8 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
 
       capturedImage.value = processedImage;
       // showPreview.value = true;
-      // cameraController!.stopImageStream();
-      // imageMatching(image: pickedImage.value, context: context);
+      cameraController!.stopImageStream();
+      imageMatching(image: pickedImage.value, context: context);
       // return pickedImage.value;
     } catch (e) {
       debugPrint('Error capturing image: $e');
@@ -503,32 +545,25 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
   //     }
   //
   //     // Resize with better interpolation method
-  //     processedImage = img.copyResize(
-  //       processedImage,
-  //       width: finalWidth,
-  //       height: finalHeight,
-  //       interpolation: img.Interpolation.cubic, // Better quality than average
+  //     final sharpened = _sharpenImage(processedImage);
+  //
+  //     // 2. Apply deblurring (simplified Wiener filter)
+  //     final deblurred = _deblurImage(sharpened);
+  //
+  //     // 3. Enhance edges
+  //     final edgeEnhanced = _enhanceEdges(deblurred);
+  //
+  //     // 4. Final contrast adjustment
+  //     final adjusted = img.adjustColor(
+  //       edgeEnhanced,
+  //       contrast: 1.1,
+  //       gamma: 0.9,
   //     );
-  //
-  //     // Apply slight sharpening to reduce blur from resizing
-  //     processedImage = img.convolution(
-  //       processedImage,
-  //       filter: [-1, -1, -1, -1, 9, -1, -1, -1, -1],
-  //     );
-  //
-  //     processedImage = _applySharpening(processedImage);
-  //
-  //     // Adjust contrast slightly using available functions
-  //     processedImage = img.adjustColor(
-  //       processedImage,
-  //       contrast: 1.05,
-  //     );
-  //
   //     // Convert to JPEG with optimized quality (85 is good balance)
   //     return Uint8List.fromList(img.encodeJpg(
-  //       processedImage,
+  //       adjusted,
   //       quality: 100,
-  //       chroma: img.JpegChroma.yuv420, // Better color preservation
+  //       // chroma: img.JpegChroma.yuv420, // Better color preservation
   //     ));
   //   } catch (e) {
   //     debugPrint('Error in processCapturedImage: $e');
@@ -545,6 +580,101 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
   //     return originalBytes;
   //   }
   // }
+  img.Image _sharpenImage(img.Image image) {
+    final result = img.copyResize(image, width: image.width, height: image.height);
+    const sharpenKernel = [0, -1, 0, -1, 5, -1, 0, -1, 0];
+
+    for (var y = 1; y < image.height - 1; y++) {
+      for (var x = 1; x < image.width - 1; x++) {
+        var r = 0.0, g = 0.0, b = 0.0;
+        var i = 0;
+
+        for (var ky = -1; ky <= 1; ky++) {
+          for (var kx = -1; kx <= 1; kx++) {
+            final pixel = image.getPixel(x + kx, y + ky);
+            final weight = sharpenKernel[i++];
+            r += pixel.r * weight;
+            g += pixel.g * weight;
+            b += pixel.b * weight;
+          }
+        }
+
+        result.setPixelRgb(
+          x, y,
+          r.clamp(0, 255),
+          g.clamp(0, 255),
+          b.clamp(0, 255),
+        );
+      }
+    }
+    return result;
+  }
+  img.Image _deblurImage(img.Image image) {
+    final result = img.copyResize(image, width: image.width, height: image.height);
+    const blurRadius = 1; // Adjust based on blur severity
+
+    for (var y = blurRadius; y < image.height - blurRadius; y++) {
+      for (var x = blurRadius; x < image.width - blurRadius; x++) {
+        final center = image.getPixel(x, y);
+        var count = 1;
+        var r = center.r.toDouble();
+        var g = center.g.toDouble();
+        var b = center.b.toDouble();
+
+        // Inverse blur by subtracting neighboring pixels
+        for (var ky = -blurRadius; ky <= blurRadius; ky++) {
+          for (var kx = -blurRadius; kx <= blurRadius; kx++) {
+            if (kx == 0 && ky == 0) continue;
+            final pixel = image.getPixel(x + kx, y + ky);
+            r += center.r - pixel.r * 0.3; // Adjust factor as needed
+            g += center.g - pixel.g * 0.3;
+            b += center.b - pixel.b * 0.3;
+            count++;
+          }
+        }
+
+        result.setPixelRgb(
+          x, y,
+          (r / count).clamp(0, 255).round(),
+          (g / count).clamp(0, 255).round(),
+          (b / count).clamp(0, 255).round(),
+        );
+      }
+    }
+    return result;
+  }
+  img.Image _enhanceEdges(img.Image image) {
+    final result = img.copyResize(image, width: image.width, height: image.height);
+    const edgeKernel = [-1, -1, -1, -1, 8, -1, -1, -1, -1];
+
+    for (var y = 1; y < image.height - 1; y++) {
+      for (var x = 1; x < image.width - 1; x++) {
+        var r = 0.0, g = 0.0, b = 0.0;
+        var i = 0;
+
+        for (var ky = -1; ky <= 1; ky++) {
+          for (var kx = -1; kx <= 1; kx++) {
+            final pixel = image.getPixel(x + kx, y + ky);
+            final weight = edgeKernel[i++].toDouble();
+            r += pixel.r * weight;
+            g += pixel.g * weight;
+            b += pixel.b * weight;
+
+          }
+        }
+
+        // Blend original with edge detection
+        final original = image.getPixel(x, y);
+        result.setPixelRgb(
+          x, y,
+          ((original.r * 0.7) + r.clamp(0, 255) * 0.3).round(),
+          ((original.g * 0.7) + g.clamp(0, 255) * 0.3).round(),
+          ((original.b * 0.7) + b.clamp(0, 255) * 0.3).round(),
+        );
+      }
+    }
+    return result;
+  }
   img.Image _applySharpening(img.Image image) {
     // Create a copy to work on
     final sharpened = img.copyResize(image, width: image.width, height: image.height);
@@ -653,15 +783,6 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
   LinearGradient getButtonColor() {
     final now = DateTime.now();
     final currentTime = TimeOfDay.fromDateTime(now);
-    final today = now.toString().split(' ')[0];
-
-    // // Reset status after midnight
-    // final lastCheckInDate = box.read("lastCheckInDate") as String?;
-    // if (lastCheckInDate != today && currentTime.hour >= 0 && currentTime.minute >= 0) {
-    //   box.write("isCheckedIn", false);
-    //   box.write("isCheckedOut", false);
-    // }
-
     final isCheckedIn = box.read("isCheckedIn") as bool? ?? false;
     final isCheckedOut = box.read("isCheckedOut") as bool? ?? false;
 
