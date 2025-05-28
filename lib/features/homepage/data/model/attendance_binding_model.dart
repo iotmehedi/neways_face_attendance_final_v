@@ -1,6 +1,6 @@
 class AttendanceBindingModel {
-  var success;
-  var approval;
+  bool? success;
+  bool? approval;
   List<AttendanceBinding>? attendanceBinding;
 
   AttendanceBindingModel({this.success, this.approval, this.attendanceBinding});
@@ -29,13 +29,13 @@ class AttendanceBindingModel {
 }
 
 class AttendanceBinding {
-  var id;
-  var branchId;
-  var wifiAddress;
-  var note;
-  var uploaderInfo;
-  var createdAt;
-  var updatedAt;
+  String? id;
+  String? branchId;
+  String? wifiAddress;
+  String? note;
+  String? uploaderInfo;
+  String? createdAt;
+  String? updatedAt;
 
   AttendanceBinding(
       {this.id,

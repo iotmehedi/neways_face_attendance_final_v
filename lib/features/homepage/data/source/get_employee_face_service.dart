@@ -57,19 +57,21 @@ class GetEmployeeFaceService {
       "api_secret": "kAXan6SFy5U3UrzHMMQgCzFEHwU9jzuBF6kbsFMjRsCSY8fFVhwhRTZvBqrMbcK3",
       "employee_db_id": box.read("id"),
     });
+    print("hudai wifi $formData ${box.read("id")}");
     await _dioClient.post(
       request: formData,
       path: NetworkConfiguration.attendanceBinding,
       responseCallback: (response, message) {
-        var products = AttendanceBindingModel.fromJson(response);
-
+        print("wi-fi information found 1212 ioio ${response} ${box.read("id")}");
+        var products = AttendanceBindingModel.fromJson(jsonDecode(response));
+        print("wi-fi information found 1212ppp ${products.attendanceBinding?.first.wifiAddress} ${box.read("id")}");
         apiResponse = Response.success(products);
       },
       failureCallback: (message, status) {
         apiResponse = Response.error(message, status);
       },
     );
-
+    print("wi-fi information found 1212 jkjk ${apiResponse} ${box.read("id")}");
     return apiResponse;
   }
 }

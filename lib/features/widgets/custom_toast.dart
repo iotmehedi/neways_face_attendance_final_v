@@ -7,7 +7,7 @@ successToast(
   return ScaffoldMessenger.of(context).showSnackBar(SnackBar(
     elevation: 6.0,
     backgroundColor: Colors.green,
-    // durationion: Duration(milliseconds: 500),
+    duration: Duration(seconds: 3),
     behavior: SnackBarBehavior.floating,
     shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(20))),
@@ -49,7 +49,7 @@ void errorToast({required BuildContext context, required String msg}) {
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
     elevation: 6.0,
     backgroundColor: Colors.red[400],
-    duration: Duration(milliseconds: 1000),
+    duration: Duration(seconds: 3),
     behavior: SnackBarBehavior.floating,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.all(Radius.circular(20)),

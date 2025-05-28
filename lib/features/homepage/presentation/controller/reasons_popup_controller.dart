@@ -93,6 +93,7 @@ mixin ReasonsPopupController on GetxController {
         final jsonResponse = json.decode(responseData);
         if (response.statusCode == 200) {
           Navigator.pop(context);
+          print("the success text ${jsonResponse['message']}");
           successToast(context: context, msg: jsonResponse['message']);
           isReasonPosting.value = false;
           reasonController.value.text = '';

@@ -236,10 +236,14 @@ class SigninController extends GetxController {
            box.write("isCheckedIn", false);
          }
          if((getAttendanceModel.value.attendanceStatus?.isNotEmpty ?? false) || (getAttendanceModel.value.attendanceStatus != null)){
-           // box.write("isLate", loginModelData?.attendanceStatus.)
            for(var i in getAttendanceModel.value.attendanceStatus!){
-             if(i.intiming?.toLowerCase() == "late"){}
-             box.write("isLate", "Late");
+             if(i.type?.toLowerCase() == "checkin" || i.type?.toLowerCase() == "check in"){
+               box.write("checkinStatus", i.intiming);
+               box.write("checkinType", i.type);
+             }else if(i.type?.toLowerCase() == "checkout" || i.type?.toLowerCase() == "check out"){
+               box.write("checkoutStatus", i.intiming);
+               box.write("checkoutType", i.type);
+             }
            }
          }
         if(getAttendanceModel.value.attendance == null){

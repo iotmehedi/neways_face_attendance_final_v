@@ -119,9 +119,10 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
             update();
             return;
           }
-        }else{
-          await attendanceBinding();
         }
+        // else{
+        //   await attendanceBinding();
+        // }
         // Check and request location permission
         var permissionStatus = await Permission.locationWhenInUse.status;
         if (permissionStatus.isDenied) {
@@ -161,6 +162,7 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
           attendanceBindingModel.value.attendanceBinding!.isEmpty) {
         print("Attendance binding is null or empty");
       } else {
+        print("Wi-Fi binding matched: ");
         for (var wifi in attendanceBindingModel.value.attendanceBinding!) {
           if (wifi.wifiAddress == wifiNameValue.value) {
             print("Wi-Fi binding matched: ${wifi.wifiAddress}");
@@ -199,7 +201,9 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
   }
   void updateTime() {
     final now = DateTime.now();
-    currentTime.value = '${_twoDigits(now.hour)}:${_twoDigits(now.minute)}:${_twoDigits(now.second)}';
+    final hour = now.hour % 12;
+    final amPm = now.hour < 12 ? 'AM' : 'PM';
+    currentTime.value = '${_twoDigits(hour == 0 ? 12 : hour)}:${_twoDigits(now.minute)}:${_twoDigits(now.second)} $amPm';
   }
 
   String _twoDigits(int n) => n.toString().padLeft(2, '0');
@@ -313,7 +317,6 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
 
   Future<void> attendanceBinding() async {
     isAttendanceBindingLoading.value = true;
-    print("wifi information found");
     try {
       final useCase =
       AttendanceBindingPassUseCase(locator<GetEmployeeFaceRepository>());
@@ -324,11 +327,12 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
             response?.data ?? AttendanceBindingModel();
         for (var wifi in attendanceBindingModel.value.attendanceBinding!) {
           if(wifi.wifiAddress == wifiNameValue.value){
+            print("wifi information found ${wifi.wifiAddress}");
             isConnectedWithAuthorizedWifi.value = true;
+          }else{
+            print("wifi information found ${wifi.wifiAddress}");
           }
-          print("wifi information found ${wifi.wifiAddress}");
         }
-
       } else {
         print("wifi information not found");
       }
@@ -352,20 +356,27 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
         if (response['action'] != null) {
           if(response['action'] == "update_limit"){
             if(response['message'].contains('Check-Out time 2 times')){
+              RouteGenerator.pushNamedAndRemoveAll(context, Routes.homepage);
               popupReasons(context: context, shortCode: 'CA', message: response['message'], attendance: "Request for checkout again", warningTextColor: Colors.red, title: "Request for checkout again", action: response['action']);
             }else{
+              RouteGenerator.pushNamedAndRemoveAll(context, Routes.homepage);
               popupReasons(context: context, shortCode: 'CA', message: response['message'], attendance: "Request for checkout again", warningTextColor: Colors.red, title: "Request for checkout again", action: response['action']);
             }
           } else if(response['action'] == "weeken_today"){
+            RouteGenerator.pushNamedAndRemoveAll(context, Routes.homepage);
             popupReasons(context: context, shortCode: 'WD', message: response['message'], attendance: "Request for weekend duty", warningTextColor: Colors.red, title: "Request for weekend duty", action: response['action']);
           }else if(response['action'] == "holyday_today"){
-            popupReasons(context: context, shortCode: 'HD', message: response['message'], attendance: "Request for holyday duty", warningTextColor: Colors.red, title: "Request for holyday duty", action: response['action']);
+            RouteGenerator.pushNamedAndRemoveAll(context, Routes.homepage);
+            popupReasons(context: context, shortCode: 'HD', message: response['message'], attendance: "Request for holiday duty", warningTextColor: Colors.red, title: "Request for holiday duty", action: response['action']);
           }else if(response['action'] == "leave_today"){
-            popupReasons(context: context, shortCode: 'WL', message: response['message'], attendance: "Request for widthdraw leave", warningTextColor: Colors.red, title: "Request for widthdraw leave", action: response['action']);
+            RouteGenerator.pushNamedAndRemoveAll(context, Routes.homepage);
+            popupReasons(context: context, shortCode: 'WL', message: response['message'], attendance: "Request for withdraw leave", warningTextColor: Colors.red, title: "Request for withdraw leave", action: response['action']);
           }else if(response['action'] == "early_checkout"){
+            RouteGenerator.pushNamedAndRemoveAll(context, Routes.homepage);
             popupReasons(context: context, shortCode: 'EO', message: response['message'], attendance: "Request for early checkout", warningTextColor: Colors.red, title: "Request for early checkout", action: response['action']);
           }else if(response['action'] == "early_checkin"){
-            popupReasons(context: context, shortCode: 'EI', message: response['message'], attendance: "Request for early checkin", warningTextColor: Colors.red, title: "Request for early checkin", action: response['action']);
+            RouteGenerator.pushNamedAndRemoveAll(context, Routes.homepage);
+            popupReasons(context: context, shortCode: 'EI', message: response['message'], attendance: "Request for early check in", warningTextColor: Colors.red, title: "Request for early check in", action: response['action']);
           }
         } else {
           final currentStatus = getShiftStatus();
@@ -379,8 +390,9 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
             box.write("checkedIn", formattedDate);
             box.write("lastCheckInTime", formattedDate);
             performCheckIn();
+            RouteGenerator.pushNamedAndRemoveAll(context, Routes.homepage);
             successToast(context: context, msg: "Checked in successfully!");
-            RouteGenerator.pushNamedAndRemoveAll(navigatorKey.currentContext!, Routes.homepage);
+            await signInController.getAttendance(context: context);
           } else if (currentStatus == "Check Out" ||
               currentStatus == "Checked Out") {
             // Perform check-out
@@ -390,7 +402,9 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
                 "${now.minute.toString().padLeft(2, '0')}";
             box.write("checkedOut", formattedDate);
             performCheckOut();
+            RouteGenerator.pushNamedAndRemoveAll(context, Routes.homepage);
             successToast(context: context, msg: "Checked out successfully!");
+           await signInController.getAttendance(context: context);
           } else if (currentStatus == "On Duty") {
             // Perform check-out
             performCheckOut();
@@ -399,14 +413,19 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
                 "${now.hour.toString().padLeft(2, '0')}:"
                 "${now.minute.toString().padLeft(2, '0')}";
             box.write("checkedOut", formattedDate);
+            RouteGenerator.pushNamedAndRemoveAll(context, Routes.homepage);
             successToast(context: context, msg: "Checked out successfully!");
+            await signInController.getAttendance(context: context);
           } else if (currentStatus == "Already Checked In") {
+            RouteGenerator.pushNamedAndRemoveAll(context, Routes.homepage);
             successToast(
                 context: context, msg: "You've already checked in today");
           } else if (currentStatus == "Already Checked Out") {
+            RouteGenerator.pushNamedAndRemoveAll(context, Routes.homepage);
             successToast(
                 context: context, msg: "You've already checked out today");
           } else {
+            RouteGenerator.pushNamedAndRemoveAll(context, Routes.homepage);
             successToast(context: context, msg: "${response['message']}");
             print("mehedi mehedi");
           }

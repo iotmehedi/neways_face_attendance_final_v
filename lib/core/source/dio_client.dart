@@ -37,7 +37,7 @@ class DioClient {
           receiveTimeout: const Duration(milliseconds: 30000),
         ),
       );
-      print("response body ${response}");
+      print("response body ${response.data}");
       // var csrftoken = response.headers.remove('set-cookie').substring(10, 74);
       if (response.data != null) {
         logger.i("dio response $response");

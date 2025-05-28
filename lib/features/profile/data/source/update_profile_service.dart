@@ -20,7 +20,7 @@ class UpdateProfileService {
       path: NetworkConfiguration.profile,
 
       responseCallback: (response, message) async {
-            var responseModel = UpdateProfileModel.fromJson(response);
+            var responseModel = UpdateProfileModel.fromJson(jsonDecode(response));
             apiResponse = Response.success(responseModel);
       },
       failureCallback: (message, status) {
