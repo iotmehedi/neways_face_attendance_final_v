@@ -2,14 +2,12 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hexcolor/hexcolor.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 import 'package:intl/intl.dart';
 import 'package:location/location.dart';
@@ -59,6 +57,7 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
   Rx<Uint8List?> capturedImage = Rx<Uint8List?>(null);
   final NetworkInfo networkInfo = NetworkInfo();
   var wifiNameValue = "".obs;
+  var geoLocation = "".obs;
   var isCameraInitialized = false.obs;
 
   var similarity = "".obs;
@@ -129,6 +128,7 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
           permissionStatus = await Permission.locationWhenInUse.request();
         }
         if (permissionStatus.isGranted || permissionStatus.isLimited) {
+
           print("Location permission granted");
           try {
             wifiName = await networkInfo.getWifiName();
@@ -155,7 +155,7 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
 
       wifiNameValue.value = wifiName?.replaceAll('"', '') ?? '';
       print("Updated wifiNameValue: ${wifiNameValue.value}");
-
+      // box.read(key)
       // Check Wi-Fi matching
       isWifiMatched.value = false;
       if (attendanceBindingModel.value.attendanceBinding == null ||
@@ -192,6 +192,10 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
     if (!serviceEnabled) {
       serviceEnabled = await location.requestService();
     }
+    var locationData = await location.getLocation();
+     geoLocation.value = "${locationData.latitude.toString()},${locationData.longitude}";
+    box.write("geoLocation", "lat: ${locationData.latitude.toString()} long: ${locationData.longitude}");
+    print("this is geo location lat ${locationData.latitude.toString()} long: ${locationData.longitude} ${box.read("geoLocation")}");
     return serviceEnabled;
   }
   @override
@@ -350,7 +354,7 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
     try {
       final useCase =
       SetAttendancePassUseCase(locator<GetEmployeeFaceRepository>());
-      final response = await useCase();
+      final response = await useCase(wifiname: wifiNameValue.value, geoLocation: geoLocation.value);
       print("response ${response?['action']}");
       if (response != null) {
         if (response['action'] != null) {
@@ -405,6 +409,7 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
             RouteGenerator.pushNamedAndRemoveAll(context, Routes.homepage);
             successToast(context: context, msg: "Checked out successfully!");
            await signInController.getAttendance(context: context);
+
           } else if (currentStatus == "On Duty") {
             // Perform check-out
             performCheckOut();
@@ -416,6 +421,7 @@ class GetEmployeeFaceController extends GetxController with ReasonsPopupControll
             RouteGenerator.pushNamedAndRemoveAll(context, Routes.homepage);
             successToast(context: context, msg: "Checked out successfully!");
             await signInController.getAttendance(context: context);
+
           } else if (currentStatus == "Already Checked In") {
             RouteGenerator.pushNamedAndRemoveAll(context, Routes.homepage);
             successToast(

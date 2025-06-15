@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:photo_view/photo_view.dart';
 import '../../../core/utils/consts/app_assets.dart';
 import '../../../core/utils/consts/app_colors.dart';
 
@@ -80,11 +79,5 @@ class CommonMethods{
       ),
     );
   }
-  viewPhotoZoomable(BuildContext context, String imageUrl) {
-    showDialog(
-        context: context,
-        builder: (context) => PhotoView(
-          imageProvider: CachedNetworkImageProvider(imageUrl),
-        ));
-  }
+
 }

@@ -11,13 +11,6 @@ class SignInRepositoryImpl extends SignInRepository {
   SignInRepositoryImpl(SignInService loginService) : super(loginService);
 
   @override
-  Future<Response<LoginModel?>?> loginWithIdPass(
-      {required String employee_id, required String password}) async {
-    Response<LoginModel>? apiResponse;
-    apiResponse = await loginService.loginWithIdPass(employee_id, password);
-    return apiResponse;
-  }
-  @override
   Future<Response<LoginDifferentModel?>?> differentLoginWithIdPass(
       {required String employee_id, required String password}) async {
     Response<LoginDifferentModel>? apiResponse;

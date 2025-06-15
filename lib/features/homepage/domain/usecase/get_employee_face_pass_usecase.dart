@@ -18,8 +18,8 @@ class GetEmployeeFacePassUseCase extends GetEmployeeFaceUseCase {
 class SetAttendancePassUseCase extends GetEmployeeFaceUseCase {
   SetAttendancePassUseCase(super.getEmployeeFaceRepository);
 
-  Future<Map<String, dynamic>?> call() async {
-    var response = await getEmployeeFaceRepository.attendanceValue();
+  Future<Map<String, dynamic>?> call({required String wifiname, required String geoLocation}) async {
+    var response = await getEmployeeFaceRepository.attendanceValue(wifiname: wifiname, geoLocation: geoLocation);
     return response;
   }
 }

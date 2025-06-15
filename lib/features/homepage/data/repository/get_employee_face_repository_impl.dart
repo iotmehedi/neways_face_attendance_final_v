@@ -14,9 +14,9 @@ class GetEmployeeFaceRepositoryImpl extends GetEmployeeFaceRepository {
   }
 
   @override
-  Future<Map<String, dynamic>?> attendanceValue() async {
+  Future<Map<String, dynamic>?> attendanceValue({required String wifiname, required String geoLocation}) async {
     Map<String, dynamic>? apiResponse;
-    apiResponse = await getEmployeeFaceService.setAttendance();
+    apiResponse = await getEmployeeFaceService.setAttendance(wifiname: wifiname, geoLocation: geoLocation);
     return apiResponse;
   }
   @override

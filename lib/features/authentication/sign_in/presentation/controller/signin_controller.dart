@@ -245,6 +245,7 @@ class SigninController extends GetxController {
                box.write("checkoutType", i.type);
              }
            }
+           update();
          }
         if(getAttendanceModel.value.attendance == null){
           box.write("isCheckedOut", false);
@@ -253,8 +254,10 @@ class SigninController extends GetxController {
         } else if(getAttendanceModel.value.attendance?.checkoutTime?.isNotEmpty ?? false || getAttendanceModel.value.attendance?.checkoutTime != null){
            box.write("isCheckedOut", true);
            box.write("checkedOut", getAttendanceModel.value.attendance?.checkoutTime);
+           update();
          }else{
            box.write("isCheckedOut", false);
+           update();
          }
       }
     } catch (e) {

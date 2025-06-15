@@ -27,13 +27,23 @@ class GetEmployeeFaceService {
 
     return apiResponse;
   }
-  Future<Map<String, dynamic>?> setAttendance() async {
+  Future<Map<String, dynamic>?> setAttendance({required String wifiname, required String geoLocation}) async {
     Map<String, dynamic>? apiResponse;
     dio.FormData formData = dio.FormData.fromMap({
       "api_secret": "kAXan6SFy5U3UrzHMMQgCzFEHwU9jzuBF6kbsFMjRsCSY8fFVhwhRTZvBqrMbcK3",
       "employee_db_id": box.read("id"),
+      "wifi_from" : wifiname,
+      "geo_location": geoLocation
     });
-    print("login credentials $formData");
+// Convert FormData back to a readable Map
+    final formDataMap = {
+      "api_secret": formData.fields.firstWhere((field) => field.key == "api_secret").value,
+      "employee_db_id": formData.fields.firstWhere((field) => field.key == "employee_db_id").value,
+      "wifi_from": formData.fields.firstWhere((field) => field.key == "wifi_from").value,
+      "geo_location": formData.fields.firstWhere((field) => field.key == "geo_location").value,
+    };
+
+    print("FormData contents: $formDataMap");
 
     await _dioClient.post(
       path: NetworkConfiguration.setAttendance,

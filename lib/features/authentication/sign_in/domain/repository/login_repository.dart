@@ -12,8 +12,6 @@ abstract class SignInRepository {
 
   SignInRepository(this.loginService);
 
-  Future<Response<LoginModel?>?> loginWithIdPass(
-      {required String employee_id, required String password});
 
   Future<Response<LoginDifferentModel?>?> differentLoginWithIdPass(
       {required String employee_id, required String password});
